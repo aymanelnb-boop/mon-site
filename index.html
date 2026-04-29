@@ -867,6 +867,8 @@
     /* ── LOGO LIVE MODAL ── */
     #logoLiveModal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;display:none;flex-direction:column;backdrop-filter:blur(12px)}
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>emailjs.init('xt8LSGWCFtJ28bKyM');</script>
 </head>
 <body>
 
@@ -1209,12 +1211,7 @@
               <div>
                 <div class="footer-col-title">Navigation</div>
                 <ul class="footer-links">
-                  <li><a href="#"><span class="fl-dot"></span>Accueil</a></li>
-                  <li><a href="#"><span class="fl-dot"></span>Boutique</a></li>
-                  <li><a href="#"><span class="fl-dot"></span>Actualités</a></li>
-                  <li><a href="#"><span class="fl-dot"></span>Équipes</a></li>
-                  <li><a href="#"><span class="fl-dot"></span>Calendrier</a></li>
-                  <li><a href="#"><span class="fl-dot"></span>Sponsors</a></li>
+                  <li><a href="/"><span class="fl-dot"></span>Accueil</a></li>
                 </ul>
               </div>
 
@@ -1222,7 +1219,7 @@
               <div>
                 <div class="footer-col-title">Contact</div>
                 <ul class="footer-links">
-                  <li><a href="#"><span class="fl-dot"></span>Une question ? Nos équipes vous répondent</a></li>
+                  <li><a href="#" onclick="openContactModal();return false;"><span class="fl-dot"></span>Une question ? Nos équipes vous répondent</a></li>
                   <li><a href="#"><span class="fl-dot"></span>Développeurs</a></li>
                 </ul>
               </div>
@@ -1341,7 +1338,30 @@
     </div>
   </div>
 </div>
-
+<div id="contactModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;align-items:center;justify-content:center;backdrop-filter:blur(10px)">
+  <div style="background:var(--card);border:1px solid var(--accent);border-radius:16px;width:460px;max-width:95vw;overflow:hidden;box-shadow:0 0 60px var(--accent-glow)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--card2)">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--accent2)">💬 Nous contacter</span>
+      <button onclick="closeContactModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Nom</label>
+        <input id="contactNom" placeholder="Ton nom" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;outline:none"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Email</label>
+        <input id="contactEmail" type="email" placeholder="ton@email.com" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;outline:none"/>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Message</label>
+        <textarea id="contactMsg" placeholder="Ta question…" rows="4" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;outline:none;resize:vertical"></textarea>
+      </div>
+      <div id="contactSuccess" style="display:none;padding:10px;border-radius:8px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#86efac;font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:600">✓ Message envoyé !</div>
+      <button onclick="sendContact()" style="padding:12px;border-radius:10px;background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer">📧 Envoyer</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <div class="new-live-toast" id="newLiveToast"><div class="new-live-toast-dot"></div><span id="newLiveToastMsg"></span></div>
 
@@ -1360,7 +1380,7 @@
 // ══════════════════════════════════════════
 //  OWNER CONFIG
 // ══════════════════════════════════════════
-const OWNER_EMAIL = 'ton@email.com';
+const OWNER_EMAIL = 'aymane.lnb@gmail.com';
 
 const GRADES = [
   { id:'owner',    label:'👑 Owner',   color:'#f59e0b', bg:'rgba(245,158,11,.15)', border:'rgba(245,158,11,.4)' },
@@ -2156,6 +2176,17 @@ document.addEventListener('keydown',e=>{
 // ══════════════════════════════════════════
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function showPage(p){document.getElementById('pageLive').classList.toggle('active',p==='live');document.getElementById('navLive').classList.toggle('active',p==='live');}
+function openContactModal(){const m=document.getElementById('contactModal');m.style.display='flex';document.getElementById('contactSuccess').style.display='none';}
+function closeContactModal(){document.getElementById('contactModal').style.display='none';}
+function sendContact(){
+  const nom=document.getElementById('contactNom').value.trim();
+  const email=document.getElementById('contactEmail').value.trim();
+  const msg=document.getElementById('contactMsg').value.trim();
+  if(!nom||!email||!msg){showToast('Remplis tous les champs !');return;}
+  emailjs.send('service_8xk2oar','shnnv2m',{name:nom,email:email,message:msg})
+    .then(()=>{document.getElementById('contactSuccess').style.display='block';document.getElementById('contactNom').value='';document.getElementById('contactEmail').value='';document.getElementById('contactMsg').value='';setTimeout(()=>closeContactModal(),2000);})
+    .catch(()=>showToast('Erreur envoi, réessaie !'));
+}
 window.addEventListener('resize',()=>{if(isStreamsLaunched)updateStreamsLayout();});
 </script>
 </body>
