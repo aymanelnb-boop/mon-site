@@ -2142,16 +2142,10 @@ function toggleMuteAll(){
   globalMuted=!globalMuted;
   const btn=document.getElementById('gcMute');
   if(btn){btn.textContent=globalMuted?'🔇':'🔊';btn.classList.toggle('active',globalMuted);}
-  Object.keys(activeIframes).forEach(id=>{
-    const f=activeIframes[id];
-    if(f){try{const url=new URL(f.src);url.searchParams.set('muted',globalMuted?'true':'false');f.src=url.toString();}catch(e){}}
-  });
   showToast(globalMuted?'🔇 Tous mutés':'🔊 Son réactivé');
 }
 function setVolumeAll(val){
-  Object.keys(activeIframes).forEach(id=>{
-    try{const f=activeIframes[id];if(f&&f.contentWindow){f.contentWindow.postMessage({namespace:'Twitch.Embed',eventName:'VIDEO_COMMAND',params:{type:'setVolume',volume:val/100}},'*');}}catch(e){}
-  });
+  showToast('🔈 Volume : '+val+'%');
 }
 
 // ══════════════════════════════════════════
