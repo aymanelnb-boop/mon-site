@@ -1998,6 +1998,17 @@ function promoteStream(id){const idx=selected.indexOf(id);if(idx<=0)return;selec
 function makeIframeSrc(id,muted){return `https://player.twitch.tv/?channel=${id}&parent=${PARENT}&autoplay=true&muted=${muted}`;}
 function getOrCreateIframe(id,isMain){
   if(activeIframes[id])return activeIframes[id];
+  if(isMobile()){
+    // Sur mobile : iframe simple, plus léger et contrôlable
+    const f=document.createElement('iframe');
+    f.src=`https://player.twitch.tv/?channel=${id}&parent=${PARENT}&autoplay=true&muted=${!isMain}`;
+    f.allowFullscreen=true;
+    f.setAttribute('allow','autoplay');
+    f.style.cssText='width:100%;height:100%;border:none';
+    activeIframes[id]=f;
+    return f;
+  }
+  // Sur desktop : SDK Twitch pour contrôle play/mute/volume
   const div=document.createElement('div');
   div.id='twitch-player-'+id;
   div.style.cssText='width:100%;height:100%';
