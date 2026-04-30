@@ -811,6 +811,7 @@
       .footer-brand{grid-column:1/-1}
     }
   </style>
+  <script src="https://player.twitch.tv/js/embed/v1.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>emailjs.init('xt8LSGWCFtJ28bKyM');</script>
 </head>
@@ -1360,6 +1361,7 @@ let refreshCountdown=60, refreshTimer=null, countdownTimer=null;
 let isStreamsLaunched=false, fsMode=false, chatOpen=false, mainPct=62;
 let editingTwitch=null, currentUser=null, firestoreUnsub=null, saveDebounce=null;
 const activeIframes={};
+const twitchPlayers={};
 const PARENT=location.hostname||'localhost';
 const isMobile=()=>window.innerWidth<=768;
 let isOwner=false;
@@ -1996,7 +1998,17 @@ function promoteStream(id){const idx=selected.indexOf(id);if(idx<=0)return;selec
 function makeIframeSrc(id,muted){return `https://player.twitch.tv/?channel=${id}&parent=${PARENT}&autoplay=true&muted=${muted}`;}
 function getOrCreateIframe(id,isMain){
   if(activeIframes[id])return activeIframes[id];
-  const f=document.createElement('iframe');f.src=makeIframeSrc(id,!isMain);f.allowFullscreen=true;f.setAttribute('allow','autoplay');activeIframes[id]=f;return f;
+  const div=document.createElement('div');
+  div.id='twitch-player-'+id;
+  div.style.cssText='width:100%;height:100%';
+  activeIframes[id]=div;
+  setTimeout(()=>{
+    const player=new Twitch.Player('twitch-player-'+id,{
+      channel:id,parent:[PARENT],autoplay:true,muted:!isMain,width:'100%',height:'100%'
+    });
+    twitchPlayers[id]=player;
+  },100);
+  return div;
 }
 function updateStreamsLayout(){
   if(!isStreamsLaunched)return;
@@ -2136,29 +2148,22 @@ function toggleAllStreams(){
   globalPaused=!globalPaused;
   const btn=document.getElementById('gcPlay');
   if(btn){btn.textContent=globalPaused?'▶':'⏸';btn.classList.toggle('active',globalPaused);}
-  Object.entries(activeIframes).forEach(([id,iframe])=>{
-    iframe.src=`https://player.twitch.tv/?channel=${id}&parent=${PARENT}&autoplay=${!globalPaused}&muted=${globalMuted}`;
-  });
-  showToast(globalPaused?'⏸ Streams mis en pause':'▶ Streams relancés');
+  Object.values(twitchPlayers).forEach(p=>{globalPaused?p.pause():p.play();});
+  showToast(globalPaused?'⏸ Pause':'▶ Lecture');
 }
 
 function toggleMuteAll(){
   globalMuted=!globalMuted;
   const btn=document.getElementById('gcMute');
   if(btn){btn.textContent=globalMuted?'🔇':'🔊';btn.classList.toggle('active',globalMuted);}
-  Object.entries(activeIframes).forEach(([id,iframe])=>{
-    iframe.src=`https://player.twitch.tv/?channel=${id}&parent=${PARENT}&autoplay=true&muted=${globalMuted}`;
-  });
+  Object.values(twitchPlayers).forEach(p=>{p.setMuted(globalMuted);});
   showToast(globalMuted?'🔇 Tous mutés':'🔊 Son réactivé');
 }function setVolumeAll(val){
-  if(parseInt(val)===0 && !globalMuted){
-    globalMuted=true;
-    const btn=document.getElementById('gcMute');
-    if(btn){btn.textContent='🔇';btn.classList.add('active');}
-    Object.entries(activeIframes).forEach(([id,iframe])=>{
-      iframe.src=`https://player.twitch.tv/?channel=${id}&parent=${PARENT}&autoplay=true&muted=true`;
-    });
-  }
+  const volume=parseInt(val)/100;
+  Object.values(twitchPlayers).forEach(p=>{
+    p.setVolume(volume);
+    p.setMuted(volume===0);
+  });
   showToast('🔈 Volume : '+val+'%');
 }
 
