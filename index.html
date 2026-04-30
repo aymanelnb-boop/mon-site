@@ -2213,7 +2213,13 @@ function toggleChat(){
   p.classList.toggle('hidden',!chatOpen);
   if(!isMobile()){r.style.display=chatOpen?'block':'none';}
   b.style.cssText=chatOpen?'background:var(--accent);border-color:var(--accent);color:#fff':'';
-  if(chatOpen)updateChatSelect();
+  if(chatOpen){
+    updateChatSelect();
+    if(selected.length){
+      document.getElementById('chatSelect').value=selected[0];
+      switchChat();
+    }
+  }
 }
 function updateChatSelect(){const sel=document.getElementById('chatSelect'),cur=sel.value;sel.innerHTML='<option value="">-- Stream --</option>';selected.forEach(id=>{const s=streamers.find(x=>x.twitch===id)||{nom:id};const o=document.createElement('option');o.value=id;o.textContent=s.nom;if(id===cur)o.selected=true;sel.appendChild(o);});if(!cur&&selected.length){sel.value=selected[0];switchChat();}}
 function switchChat(){const id=document.getElementById('chatSelect').value,w=document.getElementById('chatIframeWrap');if(!id){w.innerHTML='';return;}w.innerHTML=`<iframe src="https://www.twitch.tv/embed/${id}/chat?parent=${PARENT}&darkpopout"></iframe>`;}
