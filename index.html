@@ -2135,13 +2135,7 @@ function toggleMobileSidebar(){const s=document.getElementById('sidebar');if(s.c
 function toggleAllStreams(){
   globalPaused=!globalPaused;
   const btn=document.getElementById('gcPlay');
-  if(btn){btn.textContent=globalPaused?'⏸':'▶';btn.classList.toggle('active',globalPaused);}
-  if(isStreamsLaunched){
-    Object.keys(activeIframes).forEach(id=>{
-      const f=activeIframes[id];
-      if(f){try{const url=new URL(f.src);url.searchParams.set('autoplay',globalPaused?'false':'true');f.src=url.toString();}catch(e){}}
-    });
-  }
+  if(btn){btn.textContent=globalPaused?'▶':'⏸';btn.classList.toggle('active',globalPaused);}
   showToast(globalPaused?'⏸ Streams mis en pause':'▶ Streams relancés');
 }
 function toggleMuteAll(){
