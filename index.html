@@ -2136,13 +2136,8 @@ function toggleAllStreams(){
   globalPaused=!globalPaused;
   const btn=document.getElementById('gcPlay');
   if(btn){btn.textContent=globalPaused?'▶':'⏸';btn.classList.toggle('active',globalPaused);}
-  Object.values(activeIframes).forEach(iframe=>{
-    try{
-      iframe.contentWindow.postMessage(
-        JSON.stringify({eventName: globalPaused ? 'pause' : 'play'}),
-        'https://player.twitch.tv'
-      );
-    }catch(e){}
+  Object.entries(activeIframes).forEach(([id,iframe])=>{
+    iframe.src=`https://player.twitch.tv/?channel=${id}&parent=${PARENT}&autoplay=${!globalPaused}&muted=${globalMuted}`;
   });
   showToast(globalPaused?'⏸ Streams mis en pause':'▶ Streams relancés');
 }
@@ -2151,25 +2146,19 @@ function toggleMuteAll(){
   globalMuted=!globalMuted;
   const btn=document.getElementById('gcMute');
   if(btn){btn.textContent=globalMuted?'🔇':'🔊';btn.classList.toggle('active',globalMuted);}
-  Object.values(activeIframes).forEach(iframe=>{
-    try{
-      iframe.contentWindow.postMessage(
-        JSON.stringify({eventName: globalMuted ? 'mute' : 'unmute'}),
-        'https://player.twitch.tv'
-      );
-    }catch(e){}
+  Object.entries(activeIframes).forEach(([id,iframe])=>{
+    iframe.src=`https://player.twitch.tv/?channel=${id}&parent=${PARENT}&autoplay=true&muted=${globalMuted}`;
   });
   showToast(globalMuted?'🔇 Tous mutés':'🔊 Son réactivé');
 }function setVolumeAll(val){
-  const volume=parseInt(val)/100;
-  Object.values(activeIframes).forEach(iframe=>{
-    try{
-      iframe.contentWindow.postMessage(
-        JSON.stringify({eventName:'volume', params:{volume}}),
-        'https://player.twitch.tv'
-      );
-    }catch(e){}
-  });
+  if(parseInt(val)===0 && !globalMuted){
+    globalMuted=true;
+    const btn=document.getElementById('gcMute');
+    if(btn){btn.textContent='🔇';btn.classList.add('active');}
+    Object.entries(activeIframes).forEach(([id,iframe])=>{
+      iframe.src=`https://player.twitch.tv/?channel=${id}&parent=${PARENT}&autoplay=true&muted=true`;
+    });
+  }
   showToast('🔈 Volume : '+val+'%');
 }
 
