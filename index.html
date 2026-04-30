@@ -1229,10 +1229,10 @@
       <button class="settings-close" onclick="closeSettings()">✕</button>
     </div>
     <div class="settings-tabs">
-      <button class="settings-tab active" onclick="switchSettingsTab('general',this)">⚙️ Général</button>
-      <button class="settings-tab" onclick="switchSettingsTab('shortcuts',this)">⌨️ Raccourcis</button>
-      <button class="settings-tab" onclick="switchSettingsTab('stream',this)">📺 Stream</button>
-    </div>
+     <button class="settings-tab active" onclick="switchSettingsTab('general',this)">⚙️ Général</button>
+<button class="settings-tab" onclick="switchSettingsTab('shortcuts',this)">⌨️ Raccourcis</button>
+<button class="settings-tab" onclick="switchSettingsTab('stream',this)">📺 Stream</button>
+<button class="settings-tab" onclick="switchSettingsTab('twitch',this)">🟣 Twitch</button>   </div>
     <div class="settings-body" id="settingsTabGeneral">
       <div class="settings-section">
         <div class="settings-section-title">Apparence</div>
@@ -1280,6 +1280,19 @@
       </div>
     </div>
     <div class="settings-body" id="settingsTabStream" style="display:none">
+  <div class="settings-section">
+    <div class="settings-section-title">Disposition</div>
+    <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:9px">
+      <div class="settings-row-info">
+        <div class="settings-row-label">🟣 Connexion Twitch</div>
+        <div class="settings-row-sub">Connecte ton compte pour réduire les publicités si tu es abonné Twitch Turbo ou abonné à un streameur</div>
+      </div>
+      <div id="twitchAccountInfo" style="display:none;align-items:center;gap:7px;padding:6px 10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);border-radius:8px;width:100%"></div>
+      <button id="twitchConnectBtn" onclick="connectTwitchAccount()" style="padding:10px 16px;border-radius:9px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;width:100%;text-align:center">🔗 Connecter mon compte Twitch</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;color:var(--muted);line-height:1.5">⚠️ Cela ne supprime pas les pubs à 100% — ça dépend de ton statut (Turbo, sub, etc.)</div>
+    </div>
+  </div>
+</div>
       <div class="settings-section">
         <div class="settings-section-title">Disposition</div>
         <div class="settings-row">
@@ -1367,7 +1380,85 @@ const PARENT=location.hostname||'localhost';
 const isMobile=()=>window.innerWidth<=768;
 let isOwner=false;
 let globalMuted=false, globalPaused=false;
-const PREFS_KEY='ms_prefs';
+let twitchUserToken=null;
+const TWITCH_REDIRECT=encodeURIComponent('https://aymanelnb-boop.github.io/mon-site/');
+const TWITCH_SCOPES='user:read:subscriptions';
+
+function connectTwitchAccount(){
+  const url=`https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${TWITCH_REDIRECT}&response_type=token&scope=${TWITCH_SCOPES}&force_verify=true`;
+  window.open(url,'_self');
+}
+function disconnectTwitchAccount(){
+  twitchUserToken=null;
+  localStorage.removeItem('ms_twitch_token');
+  localStorage.removeItem('ms_twitch_user');
+  document.getElementById('twitchConnectBtn').innerHTML='🔗 Connecter mon compte Twitch';
+  document.getElementById('twitchConnectBtn').onclick=connectTwitchAccount;
+  document.getElementById('twitchAccountInfo').style.display='none';
+  showToast('Compte Twitch déconnecté');
+  // Recharger les streams avec le token anonyme
+  Object.keys(activeIframes).forEach(id=>{
+    if(activeIframes[id].tagName==='IFRAME'){
+      activeIframes[id].src=makeIframeSrc(id,true);
+    }
+  });
+}
+function checkTwitchCallback(){
+  const hash=window.location.hash;
+  if(!hash.includes('access_token'))return;
+  const params=new URLSearchParams(hash.replace('#',''));
+  const token=params.get('access_token');
+  if(!token)return;
+  twitchUserToken=token;
+  localStorage.setItem('ms_twitch_token',token);
+  // Nettoyer l'URL
+  history.replaceState(null,'',window.location.pathname);
+  // Récupérer les infos du compte
+  fetch('https://api.twitch.tv/helix/users',{
+    headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+token}
+  }).then(r=>r.json()).then(d=>{
+    if(d.data&&d.data[0]){
+      const u=d.data[0];
+      localStorage.setItem('ms_twitch_user',JSON.stringify(u));
+      updateTwitchConnectUI(u);
+      showToast('✅ Compte Twitch connecté : '+u.display_name);
+      // Recharger les streams avec le token utilisateur
+      reloadStreamsWithToken();
+    }
+  }).catch(()=>{});
+}
+function updateTwitchConnectUI(user){
+  const btn=document.getElementById('twitchConnectBtn');
+  const info=document.getElementById('twitchAccountInfo');
+  if(!btn||!info)return;
+  if(user){
+    btn.innerHTML='🔓 Déconnecter Twitch';
+    btn.onclick=disconnectTwitchAccount;
+    info.style.display='flex';
+    info.innerHTML=`<img src="${user.profile_image_url}" style="width:22px;height:22px;border-radius:50%;flex-shrink:0"><span style="font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;color:var(--online)">${user.display_name}</span><span style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;color:var(--muted)">connecté</span>`;
+  }
+}
+function reloadStreamsWithToken(){
+  if(!twitchUserToken||!isStreamsLaunched)return;
+  Object.keys(activeIframes).forEach(id=>{
+    if(activeIframes[id].tagName==='IFRAME'){
+      activeIframes[id].src=`https://player.twitch.tv/?channel=${id}&parent=${PARENT}&autoplay=true&muted=false&oauth_token=${twitchUserToken}`;
+    }
+  });
+}
+function initTwitchConnect(){
+  // Vérifier si on revient du OAuth
+  checkTwitchCallback();
+  // Charger le token sauvegardé
+  const saved=localStorage.getItem('ms_twitch_token');
+  const savedUser=localStorage.getItem('ms_twitch_user');
+  if(saved){
+    twitchUserToken=saved;
+    if(savedUser){
+      try{updateTwitchConnectUI(JSON.parse(savedUser));}catch(e){}
+    }
+  }
+}
 
 function lsGet(k,d){try{const v=localStorage.getItem(k);return v!=null?JSON.parse(v):d}catch{return d}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
@@ -1565,6 +1656,7 @@ window._initApp = function(){
 if(window._firebaseReady)window._initApp();
 
 function startApp(){
+  initTwitchConnect();
   fetchLiveStatus();
   refreshTimer=setInterval(fetchLiveStatus,60000);
   startCountdown();renderPopularGrid();render();
@@ -2217,7 +2309,7 @@ function openSettings(){
 }
 function closeSettings(){document.getElementById('settingsOverlay').classList.remove('open');}
 function switchSettingsTab(tab,btn){
-  ['general','shortcuts','stream'].forEach(t=>{const el=document.getElementById('settingsTab'+t.charAt(0).toUpperCase()+t.slice(1));if(el)el.style.display=t===tab?'flex':'none';});
+  ['general','shortcuts','stream','twitch'].forEach(t=>{const el=document.getElementById('settingsTab'+t.charAt(0).toUpperCase()+t.slice(1));if(el)el.style.display=t===tab?'flex':'none';});
   document.querySelectorAll('.settings-tab').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
 }
