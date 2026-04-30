@@ -888,6 +888,49 @@
       z-index: 1001 !important; width: 4px !important;
       cursor: col-resize !important;
     }
+    /* ── SETTINGS PANEL ── */
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(12px)}
+.settings-overlay.open{display:flex}
+.settings-box{width:560px;max-width:96vw;max-height:90vh;background:var(--card);border:1px solid var(--border2);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 80px rgba(124,58,237,.2),0 30px 60px rgba(0,0,0,.5)}
+.settings-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(245,158,11,.06));border-bottom:1px solid var(--border);flex-shrink:0}
+.settings-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:4px;background:linear-gradient(135deg,#a855f7,#7c3aed,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.settings-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:4px 8px;border-radius:6px;transition:color .14s}
+.settings-close:hover{color:var(--live)}
+.settings-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.settings-tab{flex:1;padding:12px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .14s}
+.settings-tab:hover{color:var(--text)}
+.settings-tab.active{color:var(--accent2);border-bottom-color:var(--accent);background:rgba(124,58,237,.06)}
+.settings-body{flex:1;overflow-y:auto;padding:22px 24px;display:flex;flex-direction:column;gap:20px}
+.settings-section{display:flex;flex-direction:column;gap:12px}
+.settings-section-title{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent2);padding-bottom:8px;border-bottom:1px solid var(--border)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px}
+.settings-row-info{display:flex;flex-direction:column;gap:3px}
+.settings-row-label{font-family:'Barlow Condensed',sans-serif;font-size:.88rem;font-weight:700;color:var(--text)}
+.settings-row-sub{font-size:.72rem;color:var(--muted);line-height:1.4}
+.settings-select{padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:600;outline:none;cursor:pointer;min-width:140px}
+.settings-select:focus{border-color:var(--accent)}
+.settings-toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.settings-toggle input{opacity:0;width:0;height:0;position:absolute}
+.settings-toggle-slider{position:absolute;inset:0;background:var(--border2);border-radius:12px;cursor:pointer;transition:all .2s}
+.settings-toggle-slider::before{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:all .2s}
+.settings-toggle input:checked+.settings-toggle-slider{background:var(--accent)}
+.settings-toggle input:checked+.settings-toggle-slider::before{transform:translateX(20px)}
+
+/* Kbd grid */
+.kbd-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kbd-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--card2);border:1px solid var(--border);border-radius:8px}
+.kbd-key{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;border-radius:5px;border:1px solid var(--border2);background:var(--bg);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;color:var(--accent2);min-width:28px;flex-shrink:0}
+.kbd-desc{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;color:var(--muted2)}
+
+/* Global controls bar */
+.global-controls{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--card2);border:1px solid var(--border);border-radius:10px;flex-shrink:0}
+.gc-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:var(--card);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:all .15s;flex-shrink:0}
+.gc-btn:hover{border-color:var(--accent);background:rgba(124,58,237,.15);color:var(--accent2)}
+.gc-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.gc-sep{width:1px;height:20px;background:var(--border);flex-shrink:0}
+.gc-vol{display:flex;align-items:center;gap:5px}
+.gc-vol-icon{font-size:.8rem;color:var(--muted);flex-shrink:0}
+.gc-vol input[type=range]{width:70px;height:4px;cursor:pointer;accent-color:var(--accent)}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script>emailjs.init('xt8LSGWCFtJ28bKyM');</script>
@@ -1065,7 +1108,7 @@
         <button class="btn-logout" onclick="doLogout()">Déco</button>
       </div>
       <button class="owner-grade-btn" id="ownerGradeBtn" onclick="toggleGradePanel()" title="Panneau Grades">⭐</button>
-      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Changer le thème">☀️</button>
+      <button class="btn" onclick="openSettings()" title="Paramètres" style="padding:6px 11px">⚙️</button>
       <div class="nav-tabs">
         <button class="nav-tab active" id="navLive" onclick="showPage('live')">▶ Live</button>
       </div>
@@ -1126,6 +1169,27 @@
     <!-- MAIN -->
     <div class="main">
       <div class="sel-bar">
+  <div class="sel-bar-info">
+    <div class="chips" id="chips"><span class="empty-chips">Sélectionne des streameurs…</span></div>
+  </div>
+  <!-- GLOBAL CONTROLS -->
+  <div class="global-controls" id="globalControls">
+    <button class="gc-btn" id="gcPlay" onclick="toggleAllStreams()" title="Play / Pause tous les streams">▶</button>
+    <button class="gc-btn" id="gcMute" onclick="toggleMuteAll()" title="Mute / Unmute tous">🔊</button>
+    <div class="gc-sep"></div>
+    <div class="gc-vol">
+      <span class="gc-vol-icon">🔈</span>
+      <input type="range" id="gcVolume" min="0" max="100" value="80" oninput="setVolumeAll(this.value)" title="Volume global">
+    </div>
+    <div class="gc-sep"></div>
+    <button class="gc-btn" onclick="openStreamsFsOverlay()" title="Plein écran multi">⛶</button>
+    <button class="gc-btn" onclick="openSettings()" title="Raccourcis clavier">⌨️</button>
+  </div>
+  <div class="kbd-hint" style="flex-shrink:0;gap:5px">
+    <span class="kbd">F</span>plein écran <span class="kbd">G</span>multi <span class="kbd">C</span>chat
+  </div>
+  <button class="btn sm" onclick="clearAll()">✕ Vider</button>
+</div>
         <div class="sel-bar-info">
           <div class="chips" id="chips"><span class="empty-chips">Sélectionne des streameurs…</span></div>
         </div>
@@ -2221,6 +2285,114 @@ function sendContact(){
     .catch(()=>showToast('Erreur envoi, réessaie !'));
 }
 window.addEventListener('resize',()=>{if(isStreamsLaunched)updateStreamsLayout();});
+// ══════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════
+let globalMuted = false, globalPaused = false;
+const PREFS_KEY = 'ms_prefs';
+function getPrefs(){ return lsGet(PREFS_KEY, {}); }
+function savePref(k,v){ const p=getPrefs(); p[k]=v; lsSet(PREFS_KEY,p); }
+
+function openSettings(){
+  const s=document.getElementById('settingsOverlay');
+  s.classList.add('open');
+  // sync theme select
+  const ts=document.getElementById('themeSelect');
+  if(ts) ts.value=getCurrentTheme();
+  // sync lang
+  const ls=document.getElementById('langSelect');
+  if(ls) ls.value=lsGet('ms_lang','fr');
+  // sync prefs
+  const p=getPrefs();
+  const ids=['notifLive','notifSound','autoplay','muteSec','showViewers','showMainBadge'];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el&&p[id]!==undefined)el.checked=p[id];});
+  const qs=document.getElementById('qualitySelect');if(qs&&p.quality)qs.value=p.quality;
+}
+function closeSettings(){ document.getElementById('settingsOverlay').classList.remove('open'); }
+function switchSettingsTab(tab, btn){
+  ['general','shortcuts','stream'].forEach(t=>{
+    const el=document.getElementById('settingsTab'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(el) el.style.display = t===tab ? 'flex' : 'none';
+  });
+  document.querySelectorAll('.settings-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+function setTheme(val){
+  document.documentElement.setAttribute('data-theme',val);
+  localStorage.setItem('ms_theme',val);
+  const icon=val==='dark'?'☀️':'🌙';
+  const btn=document.getElementById('themeToggle'); if(btn)btn.textContent=icon;
+  const mIcon=document.getElementById('mnavThemeIcon'); if(mIcon)mIcon.textContent=icon;
+}
+function setLang(val){ lsSet('ms_lang',val); showToast('🌐 Langue changée !'); }
+function setChatWidth(w){
+  const p=document.getElementById('chatPanel');
+  if(p){ p.style.width=w+'px'; p.style.minWidth=w+'px'; }
+}
+
+// ── GLOBAL PLAY/PAUSE ──
+function toggleAllStreams(){
+  globalPaused=!globalPaused;
+  const btn=document.getElementById('gcPlay');
+  if(btn){ btn.textContent=globalPaused?'⏸':'▶'; btn.classList.toggle('active',globalPaused); }
+  // recrée les iframes avec autoplay=false ou true
+  if(isStreamsLaunched){
+    Object.keys(activeIframes).forEach(id=>{
+      const f=activeIframes[id];
+      if(f){
+        const url=new URL(f.src);
+        url.searchParams.set('autoplay', globalPaused?'false':'true');
+        f.src=url.toString();
+      }
+    });
+  }
+  showToast(globalPaused ? '⏸ Streams mis en pause' : '▶ Streams relancés');
+}
+
+// ── GLOBAL MUTE ──
+function toggleMuteAll(){
+  globalMuted=!globalMuted;
+  const btn=document.getElementById('gcMute');
+  if(btn){ btn.textContent=globalMuted?'🔇':'🔊'; btn.classList.toggle('active',globalMuted); }
+  Object.keys(activeIframes).forEach(id=>{
+    const f=activeIframes[id];
+    if(f){
+      const url=new URL(f.src);
+      url.searchParams.set('muted', globalMuted?'true':'false');
+      f.src=url.toString();
+    }
+  });
+  showToast(globalMuted ? '🔇 Tous mutés' : '🔊 Son réactivé');
+}
+
+// ── GLOBAL VOLUME ──
+function setVolumeAll(val){
+  Object.keys(activeIframes).forEach(id=>{
+    try{
+      const f=activeIframes[id];
+      if(f&&f.contentWindow){
+        f.contentWindow.postMessage({namespace:'Twitch.Embed',eventName:'VIDEO_COMMAND',params:{type:'setVolume',volume:val/100}},'*');
+      }
+    }catch(e){}
+  });
+}
+
+// ── KEYBOARD SHORTCUTS ajout ──
+// Ajoute dans le keydown existant (ou en plus) :
+document.addEventListener('keydown', e2 => {
+  if(['INPUT','TEXTAREA','SELECT'].includes(e2.target.tagName)) return;
+  if(e2.key===' '){ e2.preventDefault(); toggleAllStreams(); }
+  if(e2.key==='m'||e2.key==='M') toggleMuteAll();
+  if(e2.key==='p'||e2.key==='P') openSettings();
+  if(e2.key==='ArrowRight' && selected.length>1){
+    const cur=selected[0]; selected.push(selected.shift());
+    saveState(); render(); if(isStreamsLaunched) updateStreamsLayout();
+  }
+  if(e2.key==='ArrowLeft' && selected.length>1){
+    selected.unshift(selected.pop());
+    saveState(); render(); if(isStreamsLaunched) updateStreamsLayout();
+  }
+});
 </script>
 <div id="fsFloatBar" style="display:none;position:fixed;top:0;left:0;right:0;
   height:44px;background:rgba(8,8,15,.95);backdrop-filter:blur(10px);
@@ -2232,6 +2404,193 @@ window.addEventListener('resize',()=>{if(isStreamsLaunched)updateStreamsLayout()
     <div class="kbd-hint"><span class="kbd">ESC</span> quitter</div>
     <button class="btn btn-fs-chat" onclick="toggleChat()">💬 Chat</button>
     <button class="streams-fs-close" onclick="closeStreamsFsOverlay()">✕ Quitter</button>
+  </div>
+</div>
+<!-- SETTINGS MODAL -->
+<div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-box">
+    <div class="settings-header">
+      <span class="settings-title">Paramètres</span>
+      <button class="settings-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="settings-tabs">
+      <button class="settings-tab active" onclick="switchSettingsTab('general',this)">⚙️ Général</button>
+      <button class="settings-tab" onclick="switchSettingsTab('shortcuts',this)">⌨️ Raccourcis</button>
+      <button class="settings-tab" onclick="switchSettingsTab('stream',this)">📺 Stream</button>
+    </div>
+
+    <!-- TAB GÉNÉRAL -->
+    <div class="settings-body" id="settingsTabGeneral">
+      <div class="settings-section">
+        <div class="settings-section-title">Apparence</div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Thème</div>
+            <div class="settings-row-sub">Clair ou sombre</div>
+          </div>
+          <select class="settings-select" onchange="setTheme(this.value)" id="themeSelect">
+            <option value="dark">🌙 Sombre</option>
+            <option value="light">☀️ Clair</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Langue de l'interface</div>
+            <div class="settings-row-sub">Langue des menus</div>
+          </div>
+          <select class="settings-select" id="langSelect" onchange="setLang(this.value)">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="pt">🇧🇷 Português</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">Notifications</div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Alertes live</div>
+            <div class="settings-row-sub">Notifier quand un streameur passe en live</div>
+          </div>
+          <label class="settings-toggle">
+            <input type="checkbox" id="notifLive" checked onchange="savePref('notifLive',this.checked)">
+            <span class="settings-toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Son des alertes</div>
+            <div class="settings-row-sub">Jouer un son à chaque live</div>
+          </div>
+          <label class="settings-toggle">
+            <input type="checkbox" id="notifSound" onchange="savePref('notifSound',this.checked)">
+            <span class="settings-toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">Lecture</div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Autoplay au lancement</div>
+            <div class="settings-row-sub">Lancer les streams automatiquement</div>
+          </div>
+          <label class="settings-toggle">
+            <input type="checkbox" id="autoplay" checked onchange="savePref('autoplay',this.checked)">
+            <span class="settings-toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Qualité par défaut</div>
+            <div class="settings-row-sub">Qualité des streams secondaires</div>
+          </div>
+          <select class="settings-select" id="qualitySelect" onchange="savePref('quality',this.value)">
+            <option value="auto">Auto</option>
+            <option value="1080p60">1080p 60fps</option>
+            <option value="720p60">720p 60fps</option>
+            <option value="720p">720p</option>
+            <option value="480p">480p</option>
+            <option value="360p">360p</option>
+            <option value="160p">160p</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Mute par défaut</div>
+            <div class="settings-row-sub">Muter les streams secondaires au lancement</div>
+          </div>
+          <label class="settings-toggle">
+            <input type="checkbox" id="muteSec" checked onchange="savePref('muteSec',this.checked)">
+            <span class="settings-toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB RACCOURCIS -->
+    <div class="settings-body" id="settingsTabShortcuts" style="display:none">
+      <div class="settings-section">
+        <div class="settings-section-title">Raccourcis clavier</div>
+        <div class="kbd-grid">
+          <div class="kbd-row"><span class="kbd-key">F</span><span class="kbd-desc">Plein écran stream principal</span></div>
+          <div class="kbd-row"><span class="kbd-key">G</span><span class="kbd-desc">Multistream plein écran</span></div>
+          <div class="kbd-row"><span class="kbd-key">C</span><span class="kbd-desc">Ouvrir / fermer le chat</span></div>
+          <div class="kbd-row"><span class="kbd-key">T</span><span class="kbd-desc">Changer le thème</span></div>
+          <div class="kbd-row"><span class="kbd-key">Space</span><span class="kbd-desc">Play / Pause tous les streams</span></div>
+          <div class="kbd-row"><span class="kbd-key">M</span><span class="kbd-desc">Mute / Unmute tous</span></div>
+          <div class="kbd-row"><span class="kbd-key">Enter</span><span class="kbd-desc">Lancer les streams sélectionnés</span></div>
+          <div class="kbd-row"><span class="kbd-key">ESC</span><span class="kbd-desc">Fermer plein écran / modal</span></div>
+          <div class="kbd-row"><span class="kbd-key">⚙️ P</span><span class="kbd-desc">Ouvrir les paramètres</span></div>
+          <div class="kbd-row"><span class="kbd-key">← →</span><span class="kbd-desc">Stream suivant / précédent</span></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">Contrôles souris</div>
+        <div class="kbd-grid">
+          <div class="kbd-row"><span class="kbd-key">Dbl clic</span><span class="kbd-desc">Plein écran stream</span></div>
+          <div class="kbd-row"><span class="kbd-key">Drag</span><span class="kbd-desc">Réorganiser les chips</span></div>
+          <div class="kbd-row"><span class="kbd-key">Glisser</span><span class="kbd-desc">Redimensionner les streams</span></div>
+          <div class="kbd-row"><span class="kbd-key">Hover</span><span class="kbd-desc">Aperçu miniature live</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB STREAM -->
+    <div class="settings-body" id="settingsTabStream" style="display:none">
+      <div class="settings-section">
+        <div class="settings-section-title">Disposition</div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Taille du stream principal</div>
+            <div class="settings-row-sub">Pourcentage de la largeur</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" min="40" max="85" value="62" id="mainPctSlider"
+              oninput="document.getElementById('mainPctVal').textContent=this.value+'%';mainPct=parseInt(this.value);if(isStreamsLaunched)updateStreamsLayout()"
+              style="width:100px;accent-color:var(--accent)">
+            <span id="mainPctVal" style="font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;color:var(--accent2);min-width:36px">62%</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Largeur du chat</div>
+            <div class="settings-row-sub">Taille du panneau chat</div>
+          </div>
+          <select class="settings-select" onchange="setChatWidth(this.value)">
+            <option value="260">Étroit (260px)</option>
+            <option value="310" selected>Normal (310px)</option>
+            <option value="380">Large (380px)</option>
+            <option value="460">Très large (460px)</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">Infos à l'écran</div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Afficher le nombre de viewers</div>
+            <div class="settings-row-sub">Badge viewers sur chaque stream</div>
+          </div>
+          <label class="settings-toggle">
+            <input type="checkbox" id="showViewers" checked onchange="savePref('showViewers',this.checked)">
+            <span class="settings-toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Badge "Principal"</div>
+            <div class="settings-row-sub">Afficher le badge sur le stream principal</div>
+          </div>
+          <label class="settings-toggle">
+            <input type="checkbox" id="showMainBadge" checked onchange="savePref('showMainBadge',this.checked)">
+            <span class="settings-toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 </body>
