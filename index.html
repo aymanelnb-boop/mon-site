@@ -2222,7 +2222,7 @@ function toggleChat(){
   }
 }
 function updateChatSelect(){const sel=document.getElementById('chatSelect'),cur=sel.value;sel.innerHTML='<option value="">-- Stream --</option>';selected.forEach(id=>{const s=streamers.find(x=>x.twitch===id)||{nom:id};const o=document.createElement('option');o.value=id;o.textContent=s.nom;if(id===cur)o.selected=true;sel.appendChild(o);});if(!cur&&selected.length){sel.value=selected[0];switchChat();}}
-function switchChat(){const id=document.getElementById('chatSelect').value,w=document.getElementById('chatIframeWrap');if(!id){w.innerHTML='';return;}w.innerHTML=`<iframe src="https://www.twitch.tv/embed/${id}/chat?parent=${PARENT}&darkpopout"></iframe>`;}
+function switchChat(){const id=document.getElementById('chatSelect').value,w=document.getElementById('chatIframeWrap');if(!id){w.innerHTML='';return;}w.innerHTML=`<iframe src="https://www.twitch.tv/embed/${id}/chat?parent=${PARENT}&darkpopout" style="width:100%;height:100%;border:none" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>`;}
 (function(){
   const h=document.getElementById('chatResize'),p=document.getElementById('chatPanel');
   if(!h||!p)return;
