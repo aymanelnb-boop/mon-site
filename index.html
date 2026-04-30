@@ -866,6 +866,28 @@
 
     /* ── LOGO LIVE MODAL ── */
     #logoLiveModal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;display:none;flex-direction:column;backdrop-filter:blur(12px)}
+    .streams-area.fs-mode {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 1000 !important;
+      display: flex !important;
+    }
+    .streams-area.fs-mode .streams-layout {
+      padding-top: 44px;
+      flex: 1;
+    }
+    .fs-chat-fixed {
+      position: fixed !important;
+      right: 0 !important; top: 44px !important; bottom: 0 !important;
+      z-index: 1001 !important; height: auto !important;
+      transform: none !important; pointer-events: all !important;
+    }
+    .fs-resize-fixed {
+      position: fixed !important;
+      right: 310px !important; top: 44px !important; bottom: 0 !important;
+      z-index: 1001 !important; width: 4px !important;
+      cursor: col-resize !important;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script>emailjs.init('xt8LSGWCFtJ28bKyM');</script>
@@ -1427,6 +1449,7 @@ const CAT_COLORS = ['#7c3aed','#a855f7','#ef4444','#f59e0b','#22c55e','#3b82f6',
 //  ÉTAT
 // ══════════════════════════════════════════
 let streamers = [], categories = [], selected = [], avatarCache = {};
+let fsMode = false;
 let liveData = {}, liveset = new Set(), prevLiveset = new Set();
 let popularLiveData = {};
 const TWITCH_CLIENT_ID = '3ahij1el6hqbrnozq18kjtk01annpd';
@@ -2062,7 +2085,13 @@ function getOrCreateIframe(id,isMain){
   if(activeIframes[id])return activeIframes[id];
   const f=document.createElement('iframe');f.src=makeIframeSrc(id,!isMain);f.allowFullscreen=true;f.setAttribute('allow','autoplay');activeIframes[id]=f;return f;
 }
-function updateStreamsLayout(){if(!isStreamsLaunched)return;buildStreamsLayout(document.getElementById('streamsLayout'),selected);}
+function updateStreamsLayout(){
+  if(!isStreamsLaunched) return;
+  const container = document.getElementById('streamsLayout');
+  const currentIds = [...container.querySelectorAll('.stream-box')].map(b=>b.dataset.id);
+  if(JSON.stringify(currentIds) === JSON.stringify(selected)) return;
+  buildStreamsLayout(container, selected);
+}
 function createStreamBox(id,isMain){
   const s=streamers.find(x=>x.twitch===id)||{nom:id};
   const box=document.createElement('div');box.className='stream-box';box.id='box-'+id;box.dataset.id=id;box.style.width='100%';box.style.height='100%';
@@ -2112,9 +2141,25 @@ function buildStreamsLayout(container,ids){
 // ══════════════════════════════════════════
 //  FULLSCREEN
 // ══════════════════════════════════════════
-function openStreamsFsOverlay(){if(!selected.length)return;buildStreamsLayout(document.getElementById('streamsFsGrid'),selected);buildFsChatSelect();document.getElementById('streamsFsOverlay').classList.add('open');}
+function openStreamsFsOverlay(){
+  if(!selected.length) return;
+  if(!isStreamsLaunched) launchStreams();
+  fsMode = true;
+  document.getElementById('streamsArea').classList.add('fs-mode');
+  document.getElementById('fsFloatBar').style.display = 'flex';
+  if(chatOpen){
+    document.getElementById('chatPanel').classList.add('fs-chat-fixed');
+    document.getElementById('chatResize').classList.add('fs-resize-fixed');
+  }
+}
 function buildFsChatSelect(){const sel=document.getElementById('fsChatSelect');sel.innerHTML='<option value="">-- Choisir --</option>';selected.forEach(id=>{const s=streamers.find(x=>x.twitch===id)||{nom:id};const o=document.createElement('option');o.value=id;o.textContent=s.nom;sel.appendChild(o);});if(selected.length){sel.value=selected[0];switchFsChat();}}
-function closeStreamsFsOverlay(){document.getElementById('streamsFsOverlay').classList.remove('open');document.getElementById('streamsFsGrid').innerHTML='';document.getElementById('fsChatIframeWrap').innerHTML='';fsChatOpen=false;document.getElementById('fsChatPanel').classList.add('hidden');document.getElementById('btnFsChat').classList.remove('active');}
+function closeStreamsFsOverlay(){
+  fsMode = false;
+  document.getElementById('streamsArea').classList.remove('fs-mode');
+  document.getElementById('fsFloatBar').style.display = 'none';
+  document.getElementById('chatPanel').classList.remove('fs-chat-fixed');
+  document.getElementById('chatResize').classList.remove('fs-resize-fixed');
+}
 function toggleFsChat(){fsChatOpen=!fsChatOpen;document.getElementById('fsChatPanel').classList.toggle('hidden',!fsChatOpen);document.getElementById('btnFsChat').classList.toggle('active',fsChatOpen);if(fsChatOpen)switchFsChat();}
 function switchFsChat(){const id=document.getElementById('fsChatSelect').value,w=document.getElementById('fsChatIframeWrap');if(!id){w.innerHTML='';return;}w.innerHTML=`<iframe src="https://www.twitch.tv/embed/${id}/chat?parent=${PARENT}&darkpopout" style="width:100%;height:100%;border:none;display:block"></iframe>`;}
 function openFullscreen(id){const s=streamers.find(x=>x.twitch===id)||{nom:id};document.getElementById('fsTitle').textContent='⛶ '+s.nom;document.getElementById('fsIframe').src=`https://player.twitch.tv/?channel=${id}&parent=${PARENT}&autoplay=true&muted=false`;document.getElementById('fsOverlay').classList.add('open');}
@@ -2145,7 +2190,7 @@ document.addEventListener('keydown',e=>{
   if(isMobile())return;if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
   switch(e.key){
     case 'Escape':
-      if(document.getElementById('streamsFsOverlay').classList.contains('open')){closeStreamsFsOverlay();break;}
+      if(fsMode){closeStreamsFsOverlay();break;}
       if(document.getElementById('fsOverlay').classList.contains('open')){closeFullscreen();break;}
       if(document.getElementById('catModal').classList.contains('open')){closeCatModal();break;}
       if(document.getElementById('editModal').classList.contains('open')){closeEditModal();break;}
@@ -2177,5 +2222,17 @@ function sendContact(){
 }
 window.addEventListener('resize',()=>{if(isStreamsLaunched)updateStreamsLayout();});
 </script>
+<div id="fsFloatBar" style="display:none;position:fixed;top:0;left:0;right:0;
+  height:44px;background:rgba(8,8,15,.95);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);z-index:1002;align-items:center;
+  justify-content:space-between;padding:0 16px;gap:12px">
+  <span style="font-family:'Barlow Condensed',sans-serif;font-size:.9rem;
+    font-weight:700;color:var(--muted);letter-spacing:1px">⛶ Multistream</span>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="kbd-hint"><span class="kbd">ESC</span> quitter</div>
+    <button class="btn btn-fs-chat" onclick="toggleChat()">💬 Chat</button>
+    <button class="streams-fs-close" onclick="closeStreamsFsOverlay()">✕ Quitter</button>
+  </div>
+</div>
 </body>
 </html>
