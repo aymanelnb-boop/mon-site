@@ -2136,15 +2136,40 @@ function toggleAllStreams(){
   globalPaused=!globalPaused;
   const btn=document.getElementById('gcPlay');
   if(btn){btn.textContent=globalPaused?'▶':'⏸';btn.classList.toggle('active',globalPaused);}
+  Object.values(activeIframes).forEach(iframe=>{
+    try{
+      iframe.contentWindow.postMessage(
+        JSON.stringify({eventName: globalPaused ? 'pause' : 'play'}),
+        'https://player.twitch.tv'
+      );
+    }catch(e){}
+  });
   showToast(globalPaused?'⏸ Streams mis en pause':'▶ Streams relancés');
 }
+
 function toggleMuteAll(){
   globalMuted=!globalMuted;
   const btn=document.getElementById('gcMute');
   if(btn){btn.textContent=globalMuted?'🔇':'🔊';btn.classList.toggle('active',globalMuted);}
+  Object.values(activeIframes).forEach(iframe=>{
+    try{
+      iframe.contentWindow.postMessage(
+        JSON.stringify({eventName: globalMuted ? 'mute' : 'unmute'}),
+        'https://player.twitch.tv'
+      );
+    }catch(e){}
+  });
   showToast(globalMuted?'🔇 Tous mutés':'🔊 Son réactivé');
-}
-function setVolumeAll(val){
+}function setVolumeAll(val){
+  const volume=parseInt(val)/100;
+  Object.values(activeIframes).forEach(iframe=>{
+    try{
+      iframe.contentWindow.postMessage(
+        JSON.stringify({eventName:'volume', params:{volume}}),
+        'https://player.twitch.tv'
+      );
+    }catch(e){}
+  });
   showToast('🔈 Volume : '+val+'%');
 }
 
