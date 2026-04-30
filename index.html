@@ -2178,12 +2178,24 @@ function openStreamsFsOverlay(){
   const fb=document.getElementById('fsFloatBar');
   if(sa){sa.style.position='fixed';sa.style.inset='42px 0 0 0';sa.style.zIndex='1000';}
   if(fb)fb.style.display='flex';
-  if(chatOpen){
-    const cp=document.getElementById('chatPanel');
-    const cr=document.getElementById('chatResize');
-    if(cp){cp.style.position='fixed';cp.style.right='0';cp.style.top='42px';cp.style.bottom='0';cp.style.height='auto';cp.style.zIndex='1001';}
-    if(cr){cr.style.position='fixed';cr.style.right=cp?cp.offsetWidth+'px':'300px';cr.style.top='42px';cr.style.bottom='0';cr.style.zIndex='1001';}
+  if(!chatOpen){
+    chatOpen=true;
+    const p=document.getElementById('chatPanel');
+    const r=document.getElementById('chatResize');
+    const b=document.getElementById('btnChat');
+    p.classList.remove('hidden');
+    if(!isMobile()){r.style.display='block';}
+    b.style.cssText='background:var(--accent);border-color:var(--accent);color:#fff';
+    updateChatSelect();
+    if(selected.length){
+      document.getElementById('chatSelect').value=selected[0];
+      switchChat();
+    }
   }
+  const cp=document.getElementById('chatPanel');
+  const cr=document.getElementById('chatResize');
+  if(cp){cp.style.position='fixed';cp.style.right='0';cp.style.top='42px';cp.style.bottom='0';cp.style.height='auto';cp.style.zIndex='1001';}
+  if(cr){cr.style.position='fixed';cr.style.right=cp?cp.offsetWidth+'px':'300px';cr.style.top='42px';cr.style.bottom='0';cr.style.zIndex='1001';}
 }
 function closeStreamsFsOverlay(){
   fsMode=false;
