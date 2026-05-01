@@ -1121,24 +1121,23 @@ let topBarVisible = true;
 function toggleTopBar(){
   const selBar = document.querySelector('.sel-bar');
   const livePanel = document.getElementById('livePanel');
-  const btn = document.getElementById('topBarToggleBtn');
+  const btns = document.querySelectorAll('#topBarToggleBtn');
   topBarVisible = !topBarVisible;
+  
   if(selBar) selBar.style.display = topBarVisible ? '' : 'none';
+  
   if(livePanel){
-    livePanel.style.overflow = topBarVisible ? '' : 'visible';
-    // cache tout sauf le bouton
-    Array.from(livePanel.children).forEach(child => {
-      if(child !== btn) child.style.display = topBarVisible ? '' : 'none';
-    });
+    livePanel.style.maxHeight = topBarVisible ? '' : '0';
+    livePanel.style.overflow = topBarVisible ? '' : 'hidden';
     livePanel.style.padding = topBarVisible ? '' : '0';
-    livePanel.style.minHeight = topBarVisible ? '' : '12px';
     livePanel.style.borderBottom = topBarVisible ? '' : 'none';
   }
-  btn.textContent = topBarVisible ? '▲' : '▼';
-  btn.style.background = topBarVisible ? 'var(--card)' : 'var(--accent)';
-  btn.style.color = topBarVisible ? 'var(--muted)' : '#fff';
-  btn.style.borderColor = topBarVisible ? 'var(--border2)' : 'var(--accent)';
-  btn.style.bottom = topBarVisible ? '-12px' : '-12px';
+  
+  btns.forEach(btn => {
+    btn.textContent = topBarVisible ? '▲ Masquer' : '▼ Afficher';
+    btn.style.background = topBarVisible ? 'var(--card)' : 'var(--accent)';
+    btn.style.color = topBarVisible ? 'var(--muted)' : '#fff';
+  });
 }function moveCatUp(ci){
   if(ci<=0)return;
   [categories[ci-1],categories[ci]]=[categories[ci],categories[ci-1]];
