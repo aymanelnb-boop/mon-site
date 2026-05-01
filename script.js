@@ -842,8 +842,8 @@ function launchStreams(){
   saveHistory();
   const ws=document.getElementById('welcomeScreen');
   const sa=document.getElementById('streamsArea');
-  if(ws)ws.style.display='none';
-  if(sa){sa.classList.add('active');}
+  if(ws){ws.style.display='none';ws.style.visibility='hidden';ws.style.position='absolute';ws.style.zIndex='-1';}
+  if(sa){sa.classList.add('active');sa.style.position='relative';sa.style.zIndex='1';sa.style.flex='1';}
   isStreamsLaunched=true;
   buildStreamsLayout(document.getElementById('streamsLayout'),selected);
   if(chatOpen)updateChatSelect();
@@ -854,7 +854,7 @@ function endStreams(){
   const ws=document.getElementById('welcomeScreen');
   if(sa){sa.classList.remove('active');}
   document.getElementById('streamsLayout').innerHTML='';
-  if(ws)ws.style.display='flex';
+  if(ws){ws.style.display='flex';ws.style.visibility='';ws.style.position='';ws.style.zIndex='';}
   if(fsMode)closeStreamsFsOverlay();
   isStreamsLaunched=false;
   updateMobileNav();
