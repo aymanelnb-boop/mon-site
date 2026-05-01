@@ -361,7 +361,14 @@ async function setUserGrade(uid,gradeId){
 window._initApp = function(){
   const auth=window._auth,fb=window._fb;
   if(!auth){document.getElementById('loadingScreen').classList.add('hidden');loadState();startApp();return;}
+
+  const timeout=setTimeout(()=>{
+    document.getElementById('loadingScreen').classList.add('hidden');
+    document.getElementById('authOverlay').classList.remove('hidden');
+  },5000);
+
   fb.onAuthStateChanged(auth,async(user)=>{
+    clearTimeout(timeout);
     if(user){
       currentUser=user;isOwner=(user.email===OWNER_EMAIL);
       document.getElementById('authOverlay').classList.add('hidden');
@@ -1110,7 +1117,6 @@ function sendContact(){
 function showPage(p){document.getElementById('pageLive').classList.toggle('active',p==='live');document.getElementById('navLive').classList.toggle('active',p==='live');}
 
 window.addEventListener('resize',()=>{if(isStreamsLaunched)updateStreamsLayout();});
-let topBarVisible = true;
 let topBarVisible = true;
 function toggleTopBar(){
   const selBar = document.querySelector('.sel-bar');
