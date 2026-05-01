@@ -260,7 +260,8 @@
         <div class="mobile-streams-nav" id="mobileStreamsNav"></div>
 
         <!-- LIVE PANEL -->
-        <div class="live-panel" id="livePanel">
+        <div class="live-panel" id="livePanel" style="position:relative">
+<button onclick="toggleTopBar()" id="topBarToggleBtn" style="position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);z-index:200;background:var(--card);border:1px solid var(--border2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;padding:1px 14px;border-radius:0 0 8px 8px;cursor:pointer;letter-spacing:1px;transition:all .14s">▲</button>
           <div class="live-panel-header">
             <span class="live-dot"></span>
             <span class="live-panel-title">En live maintenant</span>
