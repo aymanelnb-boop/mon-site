@@ -658,6 +658,19 @@ function renderChips(){
 }
 
 // ══════ TOGGLE / LAUNCH ══════
+function toggleTopBar() {
+  const main = document.querySelector('.main');
+  const btn = document.getElementById('toggleTopbar');
+  
+  // toggle = ajoute la classe si elle est absente, la retire si elle est présente
+  const collapsed = main.classList.toggle('top-bar-collapsed');
+  
+  // Change la flèche selon l'état
+  btn.textContent = collapsed ? '▲' : '▼';
+  
+  // Sauvegarde la préférence
+  savePref('topBarCollapsed', collapsed);
+}
 function toggle(id){
   const idx=selected.indexOf(id);
   if(idx>=0){selected.splice(idx,1);if(activeIframes[id]){activeIframes[id].src='about:blank';delete activeIframes[id];}if(isStreamsLaunched){updateStreamsLayout();if(!selected.length)endStreams();}}
