@@ -842,8 +842,8 @@ function launchStreams(){
   saveHistory();
   const ws=document.getElementById('welcomeScreen');
   const sa=document.getElementById('streamsArea');
-  if(ws){ws.style.display='none';ws.style.visibility='hidden';ws.style.position='absolute';ws.style.zIndex='-1';}
-  if(sa){sa.classList.add('active');sa.style.position='relative';sa.style.zIndex='1';sa.style.flex='1';}
+  if(ws)ws.style.display='none';
+  if(sa){sa.classList.add('active');}
   isStreamsLaunched=true;
   buildStreamsLayout(document.getElementById('streamsLayout'),selected);
   if(chatOpen)updateChatSelect();
