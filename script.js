@@ -158,7 +158,14 @@ function initTwitchConnect(){
   if(saved){
     twitchUserToken=saved;
     if(savedUser){
-      try{updateTwitchConnectUI(JSON.parse(savedUser));}catch(e){}
+      try{
+        updateTwitchConnectUI(JSON.parse(savedUser));
+        showToast('✅ Twitch reconnecté automatiquement !');
+      }catch(e){
+        localStorage.removeItem('ms_twitch_token');
+        localStorage.removeItem('ms_twitch_user');
+        twitchUserToken=null;
+      }
     }
   }
 }
