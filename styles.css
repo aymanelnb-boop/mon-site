@@ -67,6 +67,34 @@ header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;ba
 .sb-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center;color:var(--muted)}.sb-empty-icon{font-size:2.2rem;opacity:.2}.sb-empty-title{font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.5}.sb-empty-sub{font-size:.75rem;line-height:1.6;max-width:190px}
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;min-width:0}
 .sel-bar{padding:6px 14px;background:rgba(13,13,26,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:44px;flex-wrap:nowrap;overflow:hidden;transition:var(--transition-theme)}
+.top-bar-collapsed .sel-bar,
+.top-bar-collapsed .live-panel {
+  display: none !important;
+}
+.toggle-topbar-btn {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  width: 36px;
+  height: 14px;
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .55rem;
+  color: var(--muted);
+  transition: color .14s, background .14s;
+}
+.toggle-topbar-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
 .chips{display:flex;flex-wrap:nowrap;gap:4px;min-height:22px;align-items:center;overflow-x:auto;flex:1;min-width:0}
 .chip{display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:18px;border:1px solid var(--border);background:var(--card);font-size:.72rem;font-weight:700;font-family:'Barlow Condensed',sans-serif;cursor:grab;user-select:none;transition:all .14s;flex-shrink:0}.chip:hover{border-color:var(--border2);background:var(--card2)}.chip-drag-handle{font-size:.62rem;color:var(--muted);opacity:.55}.chip-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.68rem;padding:0;transition:color .14s;line-height:1}.chip-x:hover{color:var(--live)}.empty-chips{font-size:.72rem;color:var(--muted);font-style:italic;white-space:nowrap}
 .global-controls{display:flex;align-items:center;gap:4px;padding:4px 7px;background:var(--card2);border:1px solid var(--border);border-radius:9px;flex-shrink:0}
