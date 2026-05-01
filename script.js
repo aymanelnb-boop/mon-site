@@ -662,7 +662,42 @@ function removeMemberFromCat(ci,twitch){const cat=categories[ci];if(!cat)return;
 function buildCatMembersHtml(cat){
   if(!cat.members.length)return '<div style="font-size:.7rem;color:var(--muted);padding:0 3px 3px;font-style:italic">Aucun membre</div>';
   const ci=categories.indexOf(cat);
-  return cat.members.map(t=>{const s=streamers.find(x=>x.twitch===t)||{nom:t};const isL=liveset.has(t);return `<div class="cat-member-chip${isL?' is-live':''}">${isL?'🔴 ':''}${escHtml(s.nom)}<button class="cat-member-remove" onclick="event.stopPropagation();removeMemberFromCat(${ci},'${t}')">✕</button></div>`;}).join('');
+  return cat.members.map((t,idx)=>{
+    const s=streamers.find(x=>x.twitch===t)||{nom:t};
+    const isL=liveset.has(t);
+    const catOptions=categories.map((c,i)=>`<option value="${i}"${i===ci?' selected':''}>${escHtml(c.name)}</option>`).join('');
+    return `<div class="cat-member-chip${isL?' is-live':''}" style="display:flex;align-items:center;gap:3px;padding:3px 6px">
+      <span>${isL?'🔴 ':''}${escHtml(s.nom)}</span>
+      <button onclick="event.stopPropagation();moveMemberUp(${ci},${idx})" title="Monter" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:.7rem;padding:0 1px">⬆️</button>
+      <button onclick="event.stopPropagation();moveMemberDown(${ci},${idx})" title="Descendre" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:.7rem;padding:0 1px">⬇️</button>
+      <select onchange="event.stopPropagation();changeMemberCat(${ci},${idx},this.value)" style="font-size:.6rem;padding:1px 3px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer">${catOptions}</select>
+      <button class="cat-member-remove" onclick="event.stopPropagation();removeMemberFromCat(${ci},'${t}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function moveMemberUp(ci,idx){
+  const cat=categories[ci];if(!cat||idx<=0)return;
+  [cat.members[idx-1],cat.members[idx]]=[cat.members[idx],cat.members[idx-1]];
+  saveCats();scheduleSave();renderCatModal();renderSidebar();
+}
+
+function moveMemberDown(ci,idx){
+  const cat=categories[ci];if(!cat||idx>=cat.members.length-1)return;
+  [cat.members[idx+1],cat.members[idx]]=[cat.members[idx],cat.members[idx+1]];
+  saveCats();scheduleSave();renderCatModal();renderSidebar();
+}
+
+function changeMemberCat(fromCi,idx,toCiStr){
+  const toCi=parseInt(toCiStr);
+  if(fromCi===toCi)return;
+  const fromCat=categories[fromCi];const toCat=categories[toCi];
+  if(!fromCat||!toCat)return;
+  const twitch=fromCat.members[idx];
+  if(toCat.members.includes(twitch)){showToast('Déjà dans cette catégorie !');return;}
+  fromCat.members.splice(idx,1);
+  toCat.members.push(twitch);
+  saveCats();scheduleSave();renderCatModal();renderSidebar();
+  showToast('✅ Déplacé vers "'+toCat.name+'" !');
 }
 function escHtml(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
