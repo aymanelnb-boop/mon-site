@@ -1111,15 +1111,26 @@ function showPage(p){document.getElementById('pageLive').classList.toggle('activ
 
 window.addEventListener('resize',()=>{if(isStreamsLaunched)updateStreamsLayout();});
 let topBarVisible = true;
+let topBarVisible = true;
 function toggleTopBar(){
   const selBar = document.querySelector('.sel-bar');
   const livePanel = document.getElementById('livePanel');
   const btn = document.getElementById('topBarToggleBtn');
   topBarVisible = !topBarVisible;
   if(selBar) selBar.style.display = topBarVisible ? '' : 'none';
-  if(livePanel) livePanel.style.display = topBarVisible ? '' : 'none';
-  btn.textContent = topBarVisible ? '▲ Masquer' : '▼ Afficher';
+  if(livePanel){
+    livePanel.style.overflow = topBarVisible ? '' : 'visible';
+    // cache tout sauf le bouton
+    Array.from(livePanel.children).forEach(child => {
+      if(child !== btn) child.style.display = topBarVisible ? '' : 'none';
+    });
+    livePanel.style.padding = topBarVisible ? '' : '0';
+    livePanel.style.minHeight = topBarVisible ? '' : '12px';
+    livePanel.style.borderBottom = topBarVisible ? '' : 'none';
+  }
+  btn.textContent = topBarVisible ? '▲' : '▼';
   btn.style.background = topBarVisible ? 'var(--card)' : 'var(--accent)';
   btn.style.color = topBarVisible ? 'var(--muted)' : '#fff';
   btn.style.borderColor = topBarVisible ? 'var(--border2)' : 'var(--accent)';
+  btn.style.bottom = topBarVisible ? '-12px' : '-12px';
 }
