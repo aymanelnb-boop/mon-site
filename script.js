@@ -608,7 +608,7 @@ function renderCatModal(){
       const card=document.createElement('div');card.className='cat-card';
       const membersHtml=buildCatMembersHtml(cat);
       const countLive=cat.members.filter(m=>liveset.has(m)).length;
-      card.innerHTML=`<div class="cat-card-header" onclick="toggleCatExpand(this)"><div class="cat-color-dot" style="background:${cat.color}"></div><span class="cat-name">${escHtml(cat.name)}</span>${countLive>0?`<span style="font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;color:var(--online);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);padding:1px 5px;border-radius:6px">🔴 ${countLive}</span>`:''}<span class="cat-count">${cat.members.length}</span><div class="cat-actions"><button class="cat-action-btn" onclick="event.stopPropagation();launchCategory(${ci})">▶ Lancer</button><button class="cat-action-btn danger" onclick="event.stopPropagation();deleteCategory(${ci})">🗑</button></div><button class="cat-expand-btn" tabindex="-1">▼</button></div><div class="cat-members" id="catmembers_${ci}">${membersHtml}</div><div id="cataddmember_${ci}" style="display:none;padding:0 11px 9px"><div class="cat-add-member"><input class="cat-add-member-input" id="catAddInput_${ci}" placeholder="Nom Twitch…" onkeydown="if(event.key==='Enter')addMemberToCat(${ci})"/><button class="btn sm primary" onclick="addMemberToCat(${ci})">+ Add</button></div><div class="cat-member-suggestions" id="catSuggest_${ci}"></div></div>`;
+      card.innerHTML=`<div class="cat-card-header" onclick="toggleCatExpand(this)"><div class="cat-color-dot" style="background:${cat.color}"></div><span class="cat-name">${escHtml(cat.name)}</span>${countLive>0?`<span style="font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;color:var(--online);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);padding:1px 5px;border-radius:6px">🔴 ${countLive}</span>`:''}<span class="cat-count">${cat.members.length}</span><div class="cat-actions"><button class="cat-action-btn" onclick="event.stopPropagation();launchCategory(${ci})">▶ Lancer</button><button class="cat-action-btn danger" onclick="event.stopPropagation();deleteCategory(${ci})">🗑</button><button class="cat-action-btn" onclick="event.stopPropagation();moveCatUp(${ci})" ${ci===0?'disabled':''}>⬆️</button><button class="cat-action-btn" onclick="event.stopPropagation();moveCatDown(${ci})" ${ci===categories.length-1?'disabled':''}>⬇️</button></div><button class="cat-expand-btn" tabindex="-1">▼</button></div>${countLive>0?`<span style="font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;color:var(--online);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);padding:1px 5px;border-radius:6px">🔴 ${countLive}</span>`:''}<span class="cat-count">${cat.members.length}</span><div class="cat-actions"><button class="cat-action-btn" onclick="event.stopPropagation();launchCategory(${ci})">▶ Lancer</button><button class="cat-action-btn danger" onclick="event.stopPropagation();deleteCategory(${ci})">🗑</button></div><button class="cat-expand-btn" tabindex="-1">▼</button></div><div class="cat-members" id="catmembers_${ci}">${membersHtml}</div><div id="cataddmember_${ci}" style="display:none;padding:0 11px 9px"><div class="cat-add-member"><input class="cat-add-member-input" id="catAddInput_${ci}" placeholder="Nom Twitch…" onkeydown="if(event.key==='Enter')addMemberToCat(${ci})"/><button class="btn sm primary" onclick="addMemberToCat(${ci})">+ Add</button></div><div class="cat-member-suggestions" id="catSuggest_${ci}"></div></div>`;
       const addBtn=document.createElement('button');addBtn.className='cat-action-btn';addBtn.textContent='+ Membre';addBtn.onclick=(e)=>{e.stopPropagation();toggleCatAddMember(ci,card);};
       card.querySelector('.cat-actions').insertBefore(addBtn,card.querySelector('.cat-actions').firstChild);
       catList.appendChild(card);
@@ -1133,4 +1133,16 @@ function toggleTopBar(){
   btn.style.color = topBarVisible ? 'var(--muted)' : '#fff';
   btn.style.borderColor = topBarVisible ? 'var(--border2)' : 'var(--accent)';
   btn.style.bottom = topBarVisible ? '-12px' : '-12px';
+}function moveCatUp(ci){
+  if(ci<=0)return;
+  [categories[ci-1],categories[ci]]=[categories[ci],categories[ci-1]];
+  saveCats();scheduleSave();renderCatModal();renderSidebar();
+  showToast('⬆️ Catégorie déplacée !');
+}
+
+function moveCatDown(ci){
+  if(ci>=categories.length-1)return;
+  [categories[ci+1],categories[ci]]=[categories[ci],categories[ci+1]];
+  saveCats();scheduleSave();renderCatModal();renderSidebar();
+  showToast('⬇️ Catégorie déplacée !');
 }
