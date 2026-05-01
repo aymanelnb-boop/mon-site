@@ -1124,20 +1124,25 @@ function toggleTopBar(){
   const btns = document.querySelectorAll('#topBarToggleBtn');
   topBarVisible = !topBarVisible;
   
-  if(selBar) selBar.style.display = topBarVisible ? '' : 'none';
+  if(selBar){
+    selBar.style.display = topBarVisible ? 'flex' : 'none';
+  }
   
   if(livePanel){
-    livePanel.style.maxHeight = topBarVisible ? '' : '0';
-    livePanel.style.overflow = topBarVisible ? '' : 'hidden';
-    livePanel.style.padding = topBarVisible ? '' : '0';
-    livePanel.style.borderBottom = topBarVisible ? '' : 'none';
+    if(topBarVisible){
+      livePanel.removeAttribute('style');
+    } else {
+      livePanel.style.cssText = 'display:none!important';
+    }
   }
   
   btns.forEach(btn => {
     btn.textContent = topBarVisible ? '▲ Masquer' : '▼ Afficher';
     btn.style.background = topBarVisible ? 'var(--card)' : 'var(--accent)';
     btn.style.color = topBarVisible ? 'var(--muted)' : '#fff';
+    btn.style.borderColor = topBarVisible ? 'var(--border2)' : 'var(--accent)';
   });
+
 }function moveCatUp(ci){
   if(ci<=0)return;
   [categories[ci-1],categories[ci]]=[categories[ci],categories[ci-1]];
