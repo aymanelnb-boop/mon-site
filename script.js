@@ -1110,3 +1110,16 @@ function sendContact(){
 function showPage(p){document.getElementById('pageLive').classList.toggle('active',p==='live');document.getElementById('navLive').classList.toggle('active',p==='live');}
 
 window.addEventListener('resize',()=>{if(isStreamsLaunched)updateStreamsLayout();});
+let topBarVisible = true;
+function toggleTopBar(){
+  const selBar = document.querySelector('.sel-bar');
+  const livePanel = document.getElementById('livePanel');
+  const btn = document.getElementById('topBarToggleBtn');
+  topBarVisible = !topBarVisible;
+  if(selBar) selBar.style.display = topBarVisible ? '' : 'none';
+  if(livePanel) livePanel.style.display = topBarVisible ? '' : 'none';
+  btn.textContent = topBarVisible ? '▲ Masquer' : '▼ Afficher';
+  btn.style.background = topBarVisible ? 'var(--card)' : 'var(--accent)';
+  btn.style.color = topBarVisible ? 'var(--muted)' : '#fff';
+  btn.style.borderColor = topBarVisible ? 'var(--border2)' : 'var(--accent)';
+}
