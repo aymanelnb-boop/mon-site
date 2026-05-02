@@ -129,25 +129,12 @@
 <button onclick="toggleTopBar()" id="topBarToggleBtn" style="position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:200;background:var(--card);border:1px solid var(--border2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;padding:2px 14px;border-radius:0 0 8px 8px;cursor:pointer;letter-spacing:1px;transition:all .14s">▲ Masquer</button>
   <header id="mainHeader">
     <button class="btn" id="mobileMenuBtn" onclick="openMobileSidebar()" style="padding:5px 9px;flex-shrink:0">☰</button>
-    <div class="logo-wrap" onclick="openLogoLiveModal()">
-      <svg class="logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="lg-main" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#a855f7"/><stop offset="55%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient>
-          <linearGradient id="lg-gold" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#d97706"/></linearGradient>
-        </defs>
-        <circle cx="20" cy="20" r="18" stroke="url(#lg-main)" stroke-width="1.5" fill="none" opacity=".4"/>
-        <rect x="6" y="9" width="28" height="18" rx="3.5" fill="url(#lg-main)" opacity=".12"/>
-        <rect x="6" y="9" width="28" height="18" rx="3.5" stroke="url(#lg-main)" stroke-width="1.5"/>
-        <polygon points="12,15 12,23 18.5,19" fill="url(#lg-main)"/>
-        <polygon points="20,15 20,23 26.5,19" fill="url(#lg-gold)" opacity=".85"/>
-        <rect x="17" y="27" width="6" height="3.5" rx="1" fill="url(#lg-main)" opacity=".6"/>
-        <rect x="13" y="30.5" width="14" height="2" rx="1" fill="url(#lg-main)" opacity=".45"/>
-        <circle cx="32" cy="11" r="2.5" fill="#ef4444" opacity=".9"/>
-      </svg>
-      <div class="logo-text">
-        <span class="logo-main">Multi-Stream</span>
-        <span class="logo-sub">Twitch Player</span>
-      </div>
+   <div style="flex:1;display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0;">
+  <div class="chips" id="chips">
+    <span class="empty-chips">Sélectionne des streameurs…</span>
+  </div>
+  
+</div>
     </div>
     <div class="header-right">
       <div class="user-panel" id="userPanel" style="display:none">
@@ -167,7 +154,7 @@
         <span id="refreshLabel">Live</span>
         <span class="refresh-cd" id="refreshCd">60s</span>
       </div>
-      <span id="limitTag" class="limit-tag limit-ok">0/10</span>
+     
       <button class="btn" title="Catégories" onclick="openCatModal()">🏷️</button>
       <button class="btn" onclick="clearAll()">🗑</button>
       <button class="btn" id="btnShare" onclick="shareSession()" title="Partager la session">🔗</button>
@@ -230,23 +217,24 @@
 
         <!-- BARRE DE SELECTION -->
         <div class="sel-bar">
-          <div class="chips" id="chips"><span class="empty-chips">Sélectionne des streameurs…</span></div>
-          <div class="global-controls" id="globalControls">
-            <button class="gc-btn" id="gcPlay" onclick="toggleAllStreams()" title="Play/Pause">▶</button>
-            <button class="gc-btn" id="gcMute" onclick="toggleMuteAll()" title="Mute/Unmute">🔊</button>
-            <div class="gc-sep"></div>
-            <div class="gc-vol">
-              <span class="gc-vol-icon">🔈</span>
-              <input type="range" id="gcVolume" min="0" max="100" value="80" oninput="setVolumeAll(this.value)" title="Volume global">
-            </div>
-            <div class="gc-sep"></div>
-            <button class="gc-btn" onclick="openStreamsFsOverlay()" title="Plein écran multi">⛶</button>
-          </div>
-          <div class="kbd-hint" style="flex-shrink:0;gap:4px">
-            <span class="kbd">F</span>FS <span class="kbd">G</span>multi <span class="kbd">C</span>chat
-          </div>
-          <button class="btn sm" onclick="clearAll()">✕</button>
-        </div>
+  <button class="btn primary" id="btnLaunch" onclick="launchStreams()" disabled>▶ Lancer</button>
+  <button class="btn" id="btnChat" onclick="toggleChat()">💬 Chat</button>
+  <div class="global-controls" id="globalControls">
+    <button class="gc-btn" id="gcPlay" onclick="toggleAllStreams()" title="Play/Pause">⏸</button>
+    <button class="gc-btn" id="gcMute" onclick="toggleMuteAll()" title="Mute">🔊</button>
+    <input type="range" id="gcVolume" min="0" max="100" value="80"
+           oninput="setVolumeAll(this.value)"
+           style="width:80px;accent-color:var(--accent)">
+    <button class="gc-btn" onclick="openSettings()">⚙️ Param</button>
+    <button class="btn" onclick="shareSession()">🔗</button>
+    <button class="btn" onclick="clearAll()">🗑</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0">
+    <span class="live-dot"></span>
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:.75rem;color:var(--muted)">En live</span>
+    <span id="liveCount" style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;color:var(--online);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.28);padding:2px 9px;border-radius:9px">0 live</span>
+  </div>
+</div>
 
         <!-- MOBILE CONTROLS -->
         <div class="mobile-stream-controls hidden" id="mobileStreamControls">
