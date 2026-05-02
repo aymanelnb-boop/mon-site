@@ -52,6 +52,26 @@
   </div>
 </div>
 </head>
+<!-- VOD MODAL -->
+<div id="vodModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;align-items:center;justify-content:center;backdrop-filter:blur(10px)">
+  <div style="background:var(--card);border:1px solid var(--accent);border-radius:14px;width:520px;max-width:96vw;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 60px var(--accent-glow)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);background:var(--card2)">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--accent2)">📼 Rediffusions</span>
+      <button onclick="closeVodModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem">✕</button>
+    </div>
+    <!-- Sélecteur streameur -->
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:7px;flex-shrink:0">
+      <select id="vodStreamerSelect" style="flex:1;padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.85rem;outline:none" onchange="fetchVods()">
+        <option value="">-- Choisis un streameur --</option>
+      </select>
+      <button onclick="fetchVods()" style="padding:7px 14px;border-radius:7px;background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer">↻</button>
+    </div>
+    <!-- Liste des VODs -->
+    <div id="vodList" style="flex:1;overflow-y:auto;padding:10px">
+      <div style="text-align:center;color:var(--muted);font-size:.8rem;padding:30px">Choisis un streameur pour voir ses rediffs 📼</div>
+    </div>
+  </div>
+</div>
 <body>
 
 <!-- LOADING -->
@@ -201,6 +221,7 @@
         <span class="refresh-cd" id="refreshCd">60s</span>
       </div>
       <span id="limitTag" class="limit-tag limit-ok">0/10</span>
+      <button class="btn" onclick="openVodModal()" title="Rediffusions" style="background:rgba(124,58,237,.15);border-color:var(--accent);color:var(--accent2)">📼 Rediff</button> 
       <button class="btn" title="Catégories" onclick="openCatModal()">🏷️</button>
       <button class="btn danger" onclick="clearAll()" 
   style="font-size:1.1rem;padding:7px 14px;font-weight:700;letter-spacing:1px">
@@ -253,8 +274,9 @@
         <div class="sb-list" id="sbList"></div>
         <div style="flex-shrink:0;border-top:1px solid var(--border)">
           <div style="padding:5px 9px 3px;font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;justify-content:space-between">
-            <span>Historique</span>
-          </div>
+  <span>Historique</span>
+  <button onclick="clearHistory()" style="background:none;border:none;color:var(--live);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;cursor:pointer;padding:1px 5px;border-radius:4px;transition:all .14s" title="Effacer l'historique">🗑 Effacer</button>
+</div>
           <div id="historyList"></div>
         </div>
       </div>
