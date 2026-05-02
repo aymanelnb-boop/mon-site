@@ -626,6 +626,31 @@ header::after {
 
 .mobile-stream-controls{display:none}
 @media (max-width:768px){
+  .mobile-stream-controls{
+    display:flex;
+    position:fixed;
+    bottom:56px;
+    left:0;right:0;
+    z-index:450;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    padding:8px 10px;
+    background:rgba(8,8,15,.92);
+    backdrop-filter:blur(10px);
+    border-top:1px solid var(--border);
+  }
+  .mobile-stream-controls.hidden{display:none!important}
+  .mobile-stream-controls .btn{
+    min-width:56px;
+    min-height:48px;
+    font-size:1.2rem;
+    padding:10px 16px;
+    touch-action:manipulation;
+  }
+  .msc-info{display:none}
+}
+@media (max-width:768px){
   .mobile-stream-controls{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:var(--card);border-bottom:1px solid var(--border);gap:7px;flex-shrink:0}
   .mobile-stream-controls.hidden{display:none}
 }
