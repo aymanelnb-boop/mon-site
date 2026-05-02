@@ -184,20 +184,13 @@ function saveHistory(){
   h.unshift(entry);if(h.length>5)h=h.slice(0,5);
   lsSet('ms_history',h);
 }
-function renderHistory(){
-  const h=lsGet('ms_history',[]);
-  const el=document.getElementById('historyList');if(!el)return;
-  if(!h.length){el.innerHTML='<div style="font-size:.72rem;color:var(--muted);font-style:italic;padding:4px 7px">Aucun historique</div>';return;}
-  el.innerHTML='';
-  h.forEach((entry)=>{
-    const names=entry.ids.map(id=>{const s=streamers.find(x=>x.twitch===id);return s?s.nom:id;}).join(', ');
-    const div=document.createElement('div');
-    div.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:5px 7px;border-bottom:1px solid var(--border);cursor:pointer;font-size:.72rem;gap:6px';
-    div.innerHTML=`<div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)">${names}</div><div style="font-size:.6rem;color:var(--muted);flex-shrink:0">${entry.date}</div><button style="background:rgba(124,58,237,.15);border:1px solid var(--accent);color:var(--accent2);border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;cursor:pointer;padding:2px 7px;flex-shrink:0">▶</button>`;
-    div.querySelector('button').onclick=(e)=>{e.stopPropagation();selected=[...entry.ids.filter(id=>streamers.find(s=>s.twitch===id))];saveState();render();launchStreams();showToast('▶ Session relancée !');};
-    el.appendChild(div);
-  });
+function clearHistory(){
+  if(!confirm('Effacer tout l\'historique ?'))return;
+  lsSet('ms_history',[]);
+  renderHistory();
+  showToast('🗑 Historique effacé !');
 }
+
 function saveAvatars(){lsSet('ms_av',avatarCache)}
 function saveCats(){lsSet('ms_cats',categories)}
 function loadState(){selected=lsGet('ms_sel',[]);avatarCache=lsGet('ms_av',{});categories=lsGet('ms_cats',[]);}
@@ -1312,4 +1305,87 @@ function addFromFlashback(twitch, nom, avatar, btn){
   btn.className = 'flashback-add added';
   btn.disabled = true;
   showToast('✅ '+nom+' ajouté !');
+}// ══════════════════════════════════════════
+//  VOD / REDIFFUSIONS
+// ══════════════════════════════════════════
+function openVodModal(){
+  const modal=document.getElementById('vodModal');
+  const select=document.getElementById('vodStreamerSelect');
+  modal.style.display='flex';
+  
+  // Rempli le select avec les streameurs
+  select.innerHTML='<option value="">-- Choisis un streameur --</option>';
+  streamers.forEach(s=>{
+    const opt=document.createElement('option');
+    opt.value=s.twitch;
+    opt.textContent=s.nom;
+    select.appendChild(opt);
+  });
+  
+  document.getElementById('vodList').innerHTML=
+    '<div style="text-align:center;color:var(--muted);font-size:.8rem;padding:30px">Choisis un streameur pour voir ses rediffs 📼</div>';
 }
+
+function closeVodModal(){
+  document.getElementById('vodModal').style.display='none';
+}
+
+async function fetchVods(){
+  const login=document.getElementById('vodStreamerSelect').value;
+  if(!login)return;
+  
+  const list=document.getElementById('vodList');
+  list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:.8rem;padding:20px">Chargement…</div>';
+  
+  try{
+    if(!twitchToken)twitchToken=await getTwitchToken();
+    
+    // Récupère l'ID du user
+    const rUser=await fetch('https://api.twitch.tv/helix/users?login='+login,
+      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
+    const dUser=await rUser.json();
+    if(!dUser.data||!dUser.data[0]){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px">Streameur introuvable</div>';return;}
+    const userId=dUser.data[0].id;
+    
+    // Récupère les VODs
+    const rVod=await fetch('https://api.twitch.tv/helix/videos?user_id='+userId+'&first=10&type=archive',
+      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
+    const dVod=await rVod.json();
+    
+    if(!dVod.data||!dVod.data.length){
+      list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px">Aucune rediffusion disponible 😴</div>';
+      return;
+    }
+    
+    list.innerHTML='';
+    dVod.data.forEach(vod=>{
+      const thumb=vod.thumbnail_url
+        ?vod.thumbnail_url.replace('%{width}','320').replace('%{height}','180')
+        :'';
+      const date=new Date(vod.created_at).toLocaleDateString('fr-FR');
+      
+      const item=document.createElement('div');
+      item.style.cssText='display:flex;gap:10px;padding:8px;border-radius:9px;border:1px solid var(--border);margin-bottom:7px;cursor:pointer;transition:all .14s;background:var(--card2)';
+      item.onmouseenter=()=>{item.style.borderColor='var(--accent)';};
+      item.onmouseleave=()=>{item.style.borderColor='var(--border)';};
+      item.onclick=()=>window.open(vod.url,'_blank');
+      
+      item.innerHTML=`
+        ${thumb?`<img src="${thumb}" style="width:100px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--bg)" alt="thumb">`:'<div style="width:100px;height:56px;background:var(--bg);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.3">📺</div>'}
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(vod.title)}</div>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:3px">${date} · ${vod.duration}</div>
+          <div style="font-size:.65rem;color:var(--accent2);margin-top:2px">▶ Voir la rediff</div>
+        </div>
+      `;
+      list.appendChild(item);
+    });
+    
+  }catch(e){
+    list.innerHTML='<div style="text-align:center;color:var(--live);padding:20px">Erreur de chargement 😢</div>';
+  }
+}
+
+document.getElementById('vodModal').addEventListener('click',function(e){
+  if(e.target===this)closeVodModal();
+});
