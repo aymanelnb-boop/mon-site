@@ -1204,3 +1204,112 @@ function moveCatDown(ci){
   saveCats();scheduleSave();renderCatModal();renderSidebar();
   showToast('⬇️ Catégorie déplacée !');
 }
+// ══════════════════════════════════════════
+//  FLASHBACK PANEL
+// ══════════════════════════════════════════
+let flashbackOpen = false;
+
+function toggleFlashbackPanel(){
+  flashbackOpen = !flashbackOpen;
+  const panel = document.getElementById('flashbackPanel');
+  const toggle = document.getElementById('flashbackToggle');
+  panel.classList.toggle('visible', flashbackOpen);
+  toggle.style.right = flashbackOpen ? '260px' : '0';
+  if(flashbackOpen) fetchFlashbackStreams();
+}
+
+async function fetchFlashbackStreams(){
+  const list = document.getElementById('flashbackList');
+  const countEl = document.getElementById('flashbackCount');
+  list.innerHTML = '<div class="flashback-empty">Recherche en cours…</div>';
+  
+  try{
+    if(!twitchToken) twitchToken = await getTwitchToken();
+    
+    // Cherche les streams avec FLASHBACK dans le titre
+    const r = await fetch(
+      'https://api.twitch.tv/helix/streams?first=100',
+      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}}
+    );
+    const d = await r.json();
+    
+    // Filtre ceux qui ont FLASHBACK dans le titre
+    const flashbackStreams = (d.data||[]).filter(s => 
+      s.title && s.title.toUpperCase().includes('FLASHBACK')
+    );
+    
+    countEl.textContent = flashbackStreams.length;
+    
+    if(!flashbackStreams.length){
+      list.innerHTML = '<div class="flashback-empty">Aucun stream FLASHBACK en live pour l\'instant 😴</div>';
+      return;
+    }
+    
+    // Récupère les avatars
+    const logins = flashbackStreams.map(s => 'login='+s.user_login).join('&');
+    const rUsers = await fetch(
+      'https://api.twitch.tv/helix/users?'+logins,
+      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}}
+    );
+    const dUsers = await rUsers.json();
+    const avatars = {};
+    (dUsers.data||[]).forEach(u => { avatars[u.login.toLowerCase()] = u.profile_image_url; });
+    
+    list.innerHTML = '';
+    
+    // Trie par viewers
+    flashbackStreams.sort((a,b) => b.viewer_count - a.viewer_count);
+    
+    flashbackStreams.forEach(s => {
+      const login = s.user_login.toLowerCase();
+      const avatar = avatars[login] || null;
+      const isAdded = streamers.find(x => x.twitch === login);
+      
+      const item = document.createElement('div');
+      item.className = 'flashback-item';
+      
+      const avHtml = avatar 
+        ? `<div class="flashback-av"><img src="${avatar}" alt="${s.user_name}"></div>`
+        : `<div class="flashback-av-ph">${s.user_name[0]}</div>`;
+      
+      item.innerHTML = `
+        ${avHtml}
+        <div class="flashback-info">
+          <div class="flashback-name">${escHtml(s.user_name)}</div>
+          <div class="flashback-viewers">👁 ${fmtV(s.viewer_count)} viewers</div>
+        </div>
+        <button class="flashback-add ${isAdded?'added':''}" 
+          ${isAdded?'disabled':''} 
+          onclick="event.stopPropagation();addFromFlashback('${login}','${escHtml(s.user_name)}','${avatar||''}',this)">
+          ${isAdded?'✓':'+ Add'}
+        </button>
+      `;
+      
+      item.onclick = () => {
+        if(!selected.includes(login)) toggle(login);
+      };
+      
+      list.appendChild(item);
+    });
+    
+  }catch(e){
+    list.innerHTML = '<div class="flashback-empty">Erreur de chargement 😢</div>';
+    console.warn('Flashback:', e);
+  }
+}
+
+function addFromFlashback(twitch, nom, avatar, btn){
+  if(streamers.find(s => s.twitch === twitch)){
+    showToast(nom+' déjà dans ta liste !');
+    return;
+  }
+  if(avatar) avatarCache[twitch] = avatar;
+  streamers.push({twitch, nom});
+  render();
+  scheduleSave();
+  saveAvatars();
+  btn.textContent = '✓';
+  btn.className = 'flashback-add added';
+  btn.disabled = true;
+  showToast('✅ '+nom+' ajouté !');
+}
