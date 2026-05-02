@@ -349,10 +349,58 @@ async function loadGradePanel(){
     if(!users.length){const empty=document.createElement('div');empty.className='grade-loading';empty.textContent='Aucun utilisateur';body.appendChild(empty);}
   }catch(e){body.innerHTML='<div class="grade-loading">Erreur : '+e.message+'</div>';}
 }
-async function setUserGrade(uid,gradeId){
+async function setUserGrade(uid, gradeId){
   const db=window._db,fb=window._fb;if(!db||!fb)return;
-  try{await fb.setDoc(fb.doc(db,'users',uid),{grade:gradeId},{merge:true});showToast('✅ Grade mis à jour !');}
+  try{
+    const snap=await fb.getDoc(fb.doc(db,'users',uid));
+    const oldGrade=snap.exists()?snap.data().grade||'member':'member';
+    await fb.setDoc(fb.doc(db,'users',uid),{grade:gradeId},{merge:true});
+    
+    // Sauvegarde dans l'historique
+    const userName=snap.exists()?snap.data().displayName||snap.data().email||uid:uid;
+    const history=lsGet('ms_grade_history',[]);
+    history.unshift({
+      user:userName,
+      uid:uid,
+      from:oldGrade,
+      to:gradeId,
+      date:new Date().toLocaleString('fr-FR')
+    });
+    if(history.length>30)history.splice(30);
+    lsSet('ms_grade_history',history);
+    
+    showToast('✅ Grade mis à jour !');
+    renderGradeHistory();
+  }
   catch(e){showToast('Erreur : '+e.message);}
+function renderGradeHistory(){
+  const el=document.getElementById('gradeHistoryList');
+  if(!el)return;
+  const history=lsGet('ms_grade_history',[]);
+  if(!history.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:.75rem;text-align:center;padding:10px">Aucune modification</div>';
+    return;
+  }
+  el.innerHTML='';
+  history.forEach(h=>{
+    const from=getGrade(h.from);
+    const to=getGrade(h.to);
+    const div=document.createElement('div');
+    div.style.cssText='padding:7px 10px;border-bottom:1px solid var(--border);font-family:\'Barlow Condensed\',sans-serif;font-size:.75rem';
+    div.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap">
+        <span style="color:var(--text);font-weight:700">${escHtml(h.user)}</span>
+        <span style="color:var(--muted);font-size:.65rem">${h.date}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
+        <span style="background:${from.bg};border:1px solid ${from.border};color:${from.color};padding:1px 6px;border-radius:5px;font-size:.65rem">${from.label}</span>
+        <span style="color:var(--muted)">→</span>
+        <span style="background:${to.bg};border:1px solid ${to.border};color:${to.color};padding:1px 6px;border-radius:5px;font-size:.65rem">${to.label}</span>
+      </div>
+    `;
+    el.appendChild(div);
+  });
+}
 }
 
 // ══════════════════════════════════════════
