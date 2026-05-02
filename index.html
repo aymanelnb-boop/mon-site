@@ -119,9 +119,27 @@
     <span class="grade-panel-title">⭐ GRADES & USERS</span>
     <button class="grade-panel-close" onclick="toggleGradePanel()">✕</button>
   </div>
-  <div class="grade-panel-body" id="gradePanelBody">
-    <div class="grade-loading">Chargement…</div>
+  <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0">
+  <button onclick="document.getElementById('gradeTab1').style.display='flex';document.getElementById('gradeTab2').style.display='none';renderGradeHistory()" 
+    style="flex:1;padding:8px;background:none;border:none;color:var(--accent2);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;border-bottom:2px solid var(--accent)">
+    👥 Membres
+  </button>
+  <button onclick="document.getElementById('gradeTab1').style.display='none';document.getElementById('gradeTab2').style.display='flex';renderGradeHistory()"
+    style="flex:1;padding:8px;background:none;border:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer">
+    📋 Historique
+  </button>
+</div>
+<div class="grade-panel-body" id="gradeTab1">
+  <div class="grade-loading" id="gradePanelBody">Chargement…</div>
+</div>
+<div id="gradeTab2" style="display:none;flex-direction:column;max-height:380px;overflow-y:auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;flex-shrink:0">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase">Dernières modifications</span>
+    <button onclick="lsSet('ms_grade_history',[]);renderGradeHistory()" 
+      style="background:none;border:none;color:var(--live);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;cursor:pointer;font-weight:700">Effacer</button>
   </div>
+  <div id="gradeHistoryList"></div>
+</div>
 </div>
 
 <!-- HEADER -->
