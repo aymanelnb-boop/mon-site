@@ -253,13 +253,11 @@
 
         <!-- MOBILE CONTROLS -->
         <div class="mobile-stream-controls hidden" id="mobileStreamControls">
-          <div class="msc-info"><span id="mscCount">0</span> stream(s)</div>
-          <div class="msc-btns">
-            <button class="btn sm" onclick="openStreamsFsOverlay()" style="background:linear-gradient(135deg,#312e81,#4f46e5);border-color:#6366f1;color:#c7d2fe">⛶</button>
-            <button class="btn sm" onclick="toggleChat()">💬</button>
-            <button class="btn sm danger" onclick="clearAll()">🗑</button>
-          </div>
-        </div>
+  <button class="btn" onclick="toggleAllStreams()">⏸</button>
+  <button class="btn" onclick="toggleMuteAll()">🔊</button>
+  <button class="btn" onclick="openStreamsFsOverlay()">⛶</button>
+  <button class="btn danger" onclick="clearAll()">🗑</button>
+</div>
         <div class="mobile-streams-nav" id="mobileStreamsNav"></div>
 
         <!-- LIVE PANEL -->
