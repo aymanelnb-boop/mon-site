@@ -35,7 +35,22 @@
       else window._firebaseReady = true;
     });
   </script>
+<!-- FLASHBACK PANEL -->
+<button class="flashback-toggle" id="flashbackToggle" onclick="toggleFlashbackPanel()">
+  🎬 FLASHBACK
+</button>
 
+<div class="flashback-panel" id="flashbackPanel">
+  <div class="flashback-panel-header">
+    <span class="live-dot"></span>
+    <span class="flashback-panel-title">FLASHBACK</span>
+    <span class="flashback-count" id="flashbackCount">0</span>
+    <button class="flashback-refresh" onclick="fetchFlashbackStreams()" title="Actualiser">↻</button>
+  </div>
+  <div class="flashback-list" id="flashbackList">
+    <div class="flashback-empty">Chargement…</div>
+  </div>
+</div>
 </head>
 <body>
 
