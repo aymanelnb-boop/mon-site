@@ -366,6 +366,7 @@ async function setUserGrade(uid, gradeId){
     renderGradeHistory();
   }
   catch(e){showToast('Erreur : '+e.message);}
+
 function renderGradeHistory(){
   const el=document.getElementById('gradeHistoryList');
   if(!el)return;
@@ -1155,7 +1156,15 @@ function sendContact(){
     .catch(()=>showToast('Erreur envoi, réessaie !'));
 }
 
-function showPage(p){document.getElementById('pageLive').classList.toggle('active',p==='live');document.getElementById('navLive').classList.toggle('active',p==='live');}
+function showPage(p){
+  document.getElementById('pageLive').classList.toggle('active',p==='live');
+  document.getElementById('navLive').classList.toggle('active',p==='live');
+  const pr=document.getElementById('pageRediff');
+  const nr=document.getElementById('navRediff');
+  if(pr)pr.classList.toggle('active',p==='rediff');
+  if(nr)nr.classList.toggle('active',p==='rediff');
+  if(p==='rediff')renderRediffSidebar();
+}
 
 window.addEventListener('resize',()=>{if(isStreamsLaunched)updateStreamsLayout();});
 let topBarVisible = true;
@@ -1306,85 +1315,258 @@ function addFromFlashback(twitch, nom, avatar, btn){
   btn.disabled = true;
   showToast('✅ '+nom+' ajouté !');
 }// ══════════════════════════════════════════
-//  VOD / REDIFFUSIONS
+//  MULTI-REDIFF
 // ══════════════════════════════════════════
-function openVodModal(){
-  const modal=document.getElementById('vodModal');
-  const select=document.getElementById('vodStreamerSelect');
-  modal.style.display='flex';
-  
-  // Rempli le select avec les streameurs
-  select.innerHTML='<option value="">-- Choisis un streameur --</option>';
-  streamers.forEach(s=>{
-    const opt=document.createElement('option');
-    opt.value=s.twitch;
-    opt.textContent=s.nom;
-    select.appendChild(opt);
+let selectedVods = []; // [{twitch, nom, vodId, vodTitle}]
+
+function renderRediffSidebar(){
+  const list = document.getElementById('rediffStreamerList');
+  if(!list) return;
+  list.innerHTML = '';
+  if(!streamers.length){
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:.78rem">Ajoute des streameurs dans l\'onglet Live d\'abord !</div>';
+    return;
+  }
+  streamers.forEach(s => {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:7px;cursor:pointer;border:1px solid transparent;margin-bottom:3px;transition:all .14s';
+    div.onmouseenter = () => { div.style.background='var(--card)'; div.style.borderColor='var(--border)'; };
+    div.onmouseleave = () => { div.style.background=''; div.style.borderColor='transparent'; };
+    div.onclick = () => openVodPanel(s);
+
+    const avUrl = avatarCache[s.twitch];
+    const avHtml = avUrl
+      ? `<div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid var(--border);flex-shrink:0"><img src="${avUrl}" style="width:100%;height:100%;object-fit:cover"></div>`
+      : `<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#4c1d95,#7c3aed);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:800;color:#e9d5ff;flex-shrink:0;text-transform:uppercase">${s.nom[0]}</div>`;
+
+    const hasVod = selectedVods.find(v => v.twitch === s.twitch);
+    div.innerHTML = `
+      ${avHtml}
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.nom)}</div>
+        <div style="font-size:.62rem;color:${hasVod?'var(--online)':'var(--muted)'}">${hasVod?'✓ VOD sélectionnée':'Voir les rediffs'}</div>
+      </div>
+      <span style="font-size:.8rem;color:var(--muted)">▶</span>
+    `;
+    list.appendChild(div);
   });
-  
-  document.getElementById('vodList').innerHTML=
-    '<div style="text-align:center;color:var(--muted);font-size:.8rem;padding:30px">Choisis un streameur pour voir ses rediffs 📼</div>';
 }
 
-function closeVodModal(){
-  document.getElementById('vodModal').style.display='none';
-}
+async function openVodPanel(s){
+  const panel = document.getElementById('vodPanel');
+  const title = document.getElementById('vodPanelTitle');
+  const list = document.getElementById('vodPanelList');
+  
+  panel.style.display = 'flex';
+  title.textContent = '📼 ' + s.nom;
+  list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:.8rem">Chargement des rediffs…</div>';
 
-async function fetchVods(){
-  const login=document.getElementById('vodStreamerSelect').value;
-  if(!login)return;
-  
-  const list=document.getElementById('vodList');
-  list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:.8rem;padding:20px">Chargement…</div>';
-  
   try{
-    if(!twitchToken)twitchToken=await getTwitchToken();
+    if(!twitchToken) twitchToken = await getTwitchToken();
     
-    // Récupère l'ID du user
-    const rUser=await fetch('https://api.twitch.tv/helix/users?login='+login,
+    const rUser = await fetch('https://api.twitch.tv/helix/users?login='+s.twitch,
       {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
-    const dUser=await rUser.json();
-    if(!dUser.data||!dUser.data[0]){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px">Streameur introuvable</div>';return;}
-    const userId=dUser.data[0].id;
-    
-    // Récupère les VODs
-    const rVod=await fetch('https://api.twitch.tv/helix/videos?user_id='+userId+'&first=10&type=archive',
+    const dUser = await rUser.json();
+    if(!dUser.data||!dUser.data[0]){ list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px">Introuvable</div>'; return; }
+    const userId = dUser.data[0].id;
+
+    const rVod = await fetch('https://api.twitch.tv/helix/videos?user_id='+userId+'&first=15&type=archive',
       {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
-    const dVod=await rVod.json();
-    
+    const dVod = await rVod.json();
+
     if(!dVod.data||!dVod.data.length){
-      list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px">Aucune rediffusion disponible 😴</div>';
+      list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;font-size:.8rem">Aucune rediff disponible 😴</div>';
       return;
     }
-    
-    list.innerHTML='';
-    dVod.data.forEach(vod=>{
-      const thumb=vod.thumbnail_url
-        ?vod.thumbnail_url.replace('%{width}','320').replace('%{height}','180')
-        :'';
-      const date=new Date(vod.created_at).toLocaleDateString('fr-FR');
-      
-      const item=document.createElement('div');
-      item.style.cssText='display:flex;gap:10px;padding:8px;border-radius:9px;border:1px solid var(--border);margin-bottom:7px;cursor:pointer;transition:all .14s;background:var(--card2)';
-      item.onmouseenter=()=>{item.style.borderColor='var(--accent)';};
-      item.onmouseleave=()=>{item.style.borderColor='var(--border)';};
-      item.onclick=()=>window.open(vod.url,'_blank');
-      
-      item.innerHTML=`
-        ${thumb?`<img src="${thumb}" style="width:100px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--bg)" alt="thumb">`:'<div style="width:100px;height:56px;background:var(--bg);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.3">📺</div>'}
-        <div style="flex:1;min-width:0">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(vod.title)}</div>
-          <div style="font-size:.68rem;color:var(--muted);margin-top:3px">${date} · ${vod.duration}</div>
-          <div style="font-size:.65rem;color:var(--accent2);margin-top:2px">▶ Voir la rediff</div>
+
+    list.innerHTML = '';
+    dVod.data.forEach(vod => {
+      const thumb = vod.thumbnail_url
+        ? vod.thumbnail_url.replace('%{width}','280').replace('%{height}','158')
+        : '';
+      const date = new Date(vod.created_at).toLocaleDateString('fr-FR');
+      const isSelected = selectedVods.find(v => v.vodId === vod.id);
+
+      const item = document.createElement('div');
+      item.style.cssText = `display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:9px;border:1px solid ${isSelected?'var(--online)':'var(--border)'};margin-bottom:8px;cursor:pointer;transition:all .14s;background:${isSelected?'rgba(34,197,94,.06)':'var(--card2)'}`;
+      item.onmouseenter = () => { if(!isSelected) item.style.borderColor='var(--accent)'; };
+      item.onmouseleave = () => { if(!isSelected) item.style.borderColor='var(--border)'; };
+
+      item.innerHTML = `
+        ${thumb?`<img src="${thumb}" style="width:100%;border-radius:6px;object-fit:cover;display:block;background:var(--bg)" alt="">` : ''}
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;color:var(--text)">${escHtml(vod.title)}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:.65rem;color:var(--muted)">${date} · ${vod.duration}</span>
+          <button style="padding:3px 10px;border-radius:5px;background:${isSelected?'rgba(34,197,94,.12)':'rgba(124,58,237,.18)'};border:1px solid ${isSelected?'var(--online)':'var(--accent)'};color:${isSelected?'var(--online)':'var(--accent2)'};font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;cursor:pointer"
+            onclick="event.stopPropagation();selectVod('${s.twitch}','${escHtml(s.nom)}','${vod.id}','${escHtml(vod.title).replace(/'/g,'\\\'')}',this)">
+            ${isSelected?'✓ Sélectionnée':'+ Sélectionner'}
+          </button>
         </div>
       `;
       list.appendChild(item);
     });
-    
+
   }catch(e){
-    list.innerHTML='<div style="text-align:center;color:var(--live);padding:20px">Erreur de chargement 😢</div>';
+    list.innerHTML = '<div style="text-align:center;color:var(--live);padding:20px;font-size:.8rem">Erreur 😢</div>';
   }
 }
+
+function closeVodPanel(){
+  document.getElementById('vodPanel').style.display = 'none';
+}
+
+function selectVod(twitch, nom, vodId, vodTitle, btn){
+  // Retire l'ancienne VOD de ce streameur si déjà sélectionnée
+  selectedVods = selectedVods.filter(v => v.twitch !== twitch);
+  
+  const wasSelected = btn.textContent.includes('✓');
+  if(!wasSelected){
+    selectedVods.push({twitch, nom, vodId, vodTitle});
+    showToast('📼 '+nom+' ajouté !');
+  } else {
+    showToast('🗑 '+nom+' retiré !');
+  }
+  
+  renderRediffChips();
+  renderRediffSidebar();
+  
+  // Refresh le panel
+  const s = streamers.find(x => x.twitch === twitch);
+  if(s) openVodPanel(s);
+}
+
+function renderRediffChips(){
+  const area = document.getElementById('rediffChips');
+  const btn = document.getElementById('btnLaunchRediff');
+  
+  if(!selectedVods.length){
+    area.innerHTML = '<span style="font-size:.72rem;color:var(--muted);font-style:italic">Sélectionne des VODs…</span>';
+    btn.style.opacity = '.4';
+    btn.style.pointerEvents = 'none';
+    return;
+  }
+  
+  btn.style.opacity = '1';
+  btn.style.pointerEvents = 'all';
+  area.innerHTML = '';
+  
+  selectedVods.forEach(v => {
+    const chip = document.createElement('div');
+    chip.style.cssText = 'display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:18px;border:1px solid var(--border);background:var(--card);font-size:.72rem;font-weight:700;font-family:\'Barlow Condensed\',sans-serif;flex-shrink:0';
+    chip.innerHTML = `${escHtml(v.nom)} <button onclick="removeRediffVod('${v.twitch}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.68rem;padding:0;line-height:1">✕</button>`;
+    area.appendChild(chip);
+  });
+}
+
+function removeRediffVod(twitch){
+  selectedVods = selectedVods.filter(v => v.twitch !== twitch);
+  renderRediffChips();
+  renderRediffSidebar();
+  if(!selectedVods.length) stopRediff();
+}
+
+function clearRediff(){
+  selectedVods = [];
+  renderRediffChips();
+  renderRediffSidebar();
+  stopRediff();
+}
+
+function stopRediff(){
+  document.getElementById('rediffArea').style.display = 'none';
+  document.getElementById('rediffWelcome').style.display = 'flex';
+  document.getElementById('rediffLayout').innerHTML = '';
+}
+
+function launchRediff(){
+  if(!selectedVods.length) return;
+  
+  const welcome = document.getElementById('rediffWelcome');
+  const area = document.getElementById('rediffArea');
+  const layout = document.getElementById('rediffLayout');
+  
+  welcome.style.display = 'none';
+  area.style.display = 'block';
+  layout.innerHTML = '';
+  layout.style.cssText = 'display:flex;width:100%;height:100%;background:#000;overflow:hidden';
+
+  if(selectedVods.length === 1){
+    // Solo
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://player.twitch.tv/?video=${selectedVods[0].vodId}&parent=${PARENT}&autoplay=true`;
+    iframe.style.cssText = 'flex:1;border:none;width:100%;height:100%';
+    iframe.allowFullscreen = true;
+    iframe.setAttribute('allow','autoplay');
+    layout.appendChild(iframe);
+  } else {
+    // Multi-pov
+    const mainPow = 62;
+    
+    // Pane principale
+    const mainPane = document.createElement('div');
+    mainPane.style.cssText = `width:${mainPow}%;height:100%;position:relative;flex-shrink:0;background:#0a0a14`;
+    
+    const mainIframe = document.createElement('iframe');
+    mainIframe.src = `https://player.twitch.tv/?video=${selectedVods[0].vodId}&parent=${PARENT}&autoplay=true`;
+    mainIframe.style.cssText = 'width:100%;height:100%;border:none;display:block';
+    mainIframe.allowFullscreen = true;
+    mainIframe.setAttribute('allow','autoplay');
+    
+    const mainLabel = document.createElement('div');
+    mainLabel.style.cssText = 'position:absolute;top:6px;left:6px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.75);font-family:\'Barlow Condensed\',sans-serif;font-size:.68rem;font-weight:700;color:#fff;pointer-events:none;z-index:2';
+    mainLabel.textContent = selectedVods[0].nom;
+    
+    mainPane.appendChild(mainIframe);
+    mainPane.appendChild(mainLabel);
+    
+    // Splitter
+    const vsplitter = document.createElement('div');
+    vsplitter.style.cssText = 'width:4px;flex-shrink:0;background:rgba(255,255,255,.04);border-left:1px solid var(--border)';
+    
+    // Pane secondaire
+    const secPane = document.createElement('div');
+    secPane.style.cssText = 'flex:1;display:flex;flex-direction:column;overflow:hidden;background:#000';
+    
+    selectedVods.slice(1).forEach((v, i) => {
+      if(i > 0){
+        const hsplit = document.createElement('div');
+        hsplit.style.cssText = 'height:4px;flex-shrink:0;background:rgba(255,255,255,.04);border-top:1px solid var(--border)';
+        secPane.appendChild(hsplit);
+      }
+      
+      const box = document.createElement('div');
+      box.style.cssText = 'flex:1;position:relative;background:#0a0a14;min-height:60px';
+      
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://player.twitch.tv/?video=${v.vodId}&parent=${PARENT}&autoplay=true&muted=true`;
+      iframe.style.cssText = 'width:100%;height:100%;border:none;display:block';
+      iframe.allowFullscreen = true;
+      iframe.setAttribute('allow','autoplay');
+      
+      const label = document.createElement('div');
+      label.style.cssText = 'position:absolute;top:6px;left:6px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.75);font-family:\'Barlow Condensed\',sans-serif;font-size:.68rem;font-weight:700;color:#fff;pointer-events:none;z-index:2';
+      label.textContent = v.nom;
+      
+      box.appendChild(iframe);
+      box.appendChild(label);
+      secPane.appendChild(box);
+    });
+    
+    layout.appendChild(mainPane);
+    layout.appendChild(vsplitter);
+    layout.appendChild(secPane);
+  }
+  
+  closeVodPanel();
+  showToast('📼 Multi-rediff lancé !');
+}
+
+
+
+
+
+    
+ 
 
 document.getElementById('vodModal').addEventListener('click',function(e){
   if(e.target===this)closeVodModal();
