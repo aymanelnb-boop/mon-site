@@ -169,8 +169,11 @@
       </div>
       <span id="limitTag" class="limit-tag limit-ok">0/10</span>
       <button class="btn" title="Catégories" onclick="openCatModal()">🏷️</button>
-      <button class="btn" onclick="clearAll()">🗑</button>
-      <button class="btn" id="btnShare" onclick="shareSession()" title="Partager la session">🔗</button>
+      <button class="btn danger" onclick="clearAll()" 
+  style="font-size:1.1rem;padding:7px 14px;font-weight:700;letter-spacing:1px">
+  🗑 Vider
+</button>
+     
       <button class="btn" id="btnChat" onclick="toggleChat()">💬</button>
       <button class="btn primary" id="btnLaunch" onclick="launchStreams()" disabled>▶ Lancer</button>
     </div>
