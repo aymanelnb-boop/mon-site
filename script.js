@@ -342,14 +342,14 @@ async function loadGradePanel(){
     if(!users.length){const empty=document.createElement('div');empty.className='grade-loading';empty.textContent='Aucun utilisateur';body.appendChild(empty);}
   }catch(e){body.innerHTML='<div class="grade-loading">Erreur : '+e.message+'</div>';}
 }
+
+// CORRECTION : accolade fermante de setUserGrade manquante dans l'original
 async function setUserGrade(uid, gradeId){
   const db=window._db,fb=window._fb;if(!db||!fb)return;
   try{
     const snap=await fb.getDoc(fb.doc(db,'users',uid));
     const oldGrade=snap.exists()?snap.data().grade||'member':'member';
     await fb.setDoc(fb.doc(db,'users',uid),{grade:gradeId},{merge:true});
-    
-    // Sauvegarde dans l'historique
     const userName=snap.exists()?snap.data().displayName||snap.data().email||uid:uid;
     const history=lsGet('ms_grade_history',[]);
     history.unshift({
@@ -361,11 +361,11 @@ async function setUserGrade(uid, gradeId){
     });
     if(history.length>30)history.splice(30);
     lsSet('ms_grade_history',history);
-    
     showToast('✅ Grade mis à jour !');
     renderGradeHistory();
   }
   catch(e){showToast('Erreur : '+e.message);}
+} // <-- accolade fermante de setUserGrade (manquait dans l'original)
 
 function renderGradeHistory(){
   const el=document.getElementById('gradeHistoryList');
@@ -394,7 +394,6 @@ function renderGradeHistory(){
     `;
     el.appendChild(div);
   });
-}
 }
 
 // ══════════════════════════════════════════
@@ -657,7 +656,7 @@ function renderCatModal(){
       const card=document.createElement('div');card.className='cat-card';
       const membersHtml=buildCatMembersHtml(cat);
       const countLive=cat.members.filter(m=>liveset.has(m)).length;
-      card.innerHTML=`<div class="cat-card-header" onclick="toggleCatExpand(this)"><div class="cat-color-dot" style="background:${cat.color}"></div><span class="cat-name">${escHtml(cat.name)}</span>${countLive>0?`<span style="font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;color:var(--online);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);padding:1px 5px;border-radius:6px">🔴 ${countLive}</span>`:''}<span class="cat-count">${cat.members.length}</span><div class="cat-actions"><button class="cat-action-btn" onclick="event.stopPropagation();launchCategory(${ci})">▶ Lancer</button><button class="cat-action-btn danger" onclick="event.stopPropagation();deleteCategory(${ci})">🗑</button><button class="cat-action-btn" onclick="event.stopPropagation();moveCatUp(${ci})" ${ci===0?'disabled':''}>⬆️</button><button class="cat-action-btn" onclick="event.stopPropagation();moveCatDown(${ci})" ${ci===categories.length-1?'disabled':''}>⬇️</button></div><button class="cat-expand-btn" tabindex="-1">▼</button></div>${countLive>0?`<span style="font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;color:var(--online);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);padding:1px 5px;border-radius:6px">🔴 ${countLive}</span>`:''}<span class="cat-count">${cat.members.length}</span><div class="cat-actions"><button class="cat-action-btn" onclick="event.stopPropagation();launchCategory(${ci})">▶ Lancer</button><button class="cat-action-btn danger" onclick="event.stopPropagation();deleteCategory(${ci})">🗑</button></div><button class="cat-expand-btn" tabindex="-1">▼</button></div><div class="cat-members" id="catmembers_${ci}">${membersHtml}</div><div id="cataddmember_${ci}" style="display:none;padding:0 11px 9px"><div class="cat-add-member"><input class="cat-add-member-input" id="catAddInput_${ci}" placeholder="Nom Twitch…" onkeydown="if(event.key==='Enter')addMemberToCat(${ci})"/><button class="btn sm primary" onclick="addMemberToCat(${ci})">+ Add</button></div><div class="cat-member-suggestions" id="catSuggest_${ci}"></div></div>`;
+      card.innerHTML=`<div class="cat-card-header" onclick="toggleCatExpand(this)"><div class="cat-color-dot" style="background:${cat.color}"></div><span class="cat-name">${escHtml(cat.name)}</span>${countLive>0?`<span style="font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;color:var(--online);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);padding:1px 5px;border-radius:6px">🔴 ${countLive}</span>`:''}<span class="cat-count">${cat.members.length}</span><div class="cat-actions"><button class="cat-action-btn" onclick="event.stopPropagation();launchCategory(${ci})">▶ Lancer</button><button class="cat-action-btn danger" onclick="event.stopPropagation();deleteCategory(${ci})">🗑</button><button class="cat-action-btn" onclick="event.stopPropagation();moveCatUp(${ci})" ${ci===0?'disabled':''}>⬆️</button><button class="cat-action-btn" onclick="event.stopPropagation();moveCatDown(${ci})" ${ci===categories.length-1?'disabled':''}>⬇️</button></div><button class="cat-expand-btn" tabindex="-1">▼</button></div><div class="cat-members" id="catmembers_${ci}">${membersHtml}</div><div id="cataddmember_${ci}" style="display:none;padding:0 11px 9px"><div class="cat-add-member"><input class="cat-add-member-input" id="catAddInput_${ci}" placeholder="Nom Twitch…" onkeydown="if(event.key==='Enter')addMemberToCat(${ci})"/><button class="btn sm primary" onclick="addMemberToCat(${ci})">+ Add</button></div><div class="cat-member-suggestions" id="catSuggest_${ci}"></div></div>`;
       const addBtn=document.createElement('button');addBtn.className='cat-action-btn';addBtn.textContent='+ Membre';addBtn.onclick=(e)=>{e.stopPropagation();toggleCatAddMember(ci,card);};
       card.querySelector('.cat-actions').insertBefore(addBtn,card.querySelector('.cat-actions').firstChild);
       catList.appendChild(card);
@@ -729,13 +728,11 @@ function moveMemberUp(ci,idx){
   [cat.members[idx-1],cat.members[idx]]=[cat.members[idx],cat.members[idx-1]];
   saveCats();scheduleSave();renderCatModal();renderSidebar();
 }
-
 function moveMemberDown(ci,idx){
   const cat=categories[ci];if(!cat||idx>=cat.members.length-1)return;
   [cat.members[idx+1],cat.members[idx]]=[cat.members[idx],cat.members[idx+1]];
   saveCats();scheduleSave();renderCatModal();renderSidebar();
 }
-
 function changeMemberCat(fromCi,idx,toCiStr){
   const toCi=parseInt(toCiStr);
   if(fromCi===toCi)return;
@@ -1173,39 +1170,32 @@ function toggleTopBar(){
   const livePanel = document.getElementById('livePanel');
   const btns = document.querySelectorAll('#topBarToggleBtn');
   topBarVisible = !topBarVisible;
-  
-  if(selBar){
-    selBar.style.display = topBarVisible ? 'flex' : 'none';
-  }
-  
+  if(selBar){selBar.style.display = topBarVisible ? 'flex' : 'none';}
   if(livePanel){
-    if(topBarVisible){
-      livePanel.removeAttribute('style');
-    } else {
-      livePanel.style.cssText = 'display:none!important';
-    }
+    if(topBarVisible){livePanel.removeAttribute('style');}
+    else{livePanel.style.cssText = 'display:none!important';}
   }
-  
   btns.forEach(btn => {
     btn.textContent = topBarVisible ? '▲ Masquer' : '▼ Afficher';
     btn.style.background = topBarVisible ? 'var(--card)' : 'var(--accent)';
     btn.style.color = topBarVisible ? 'var(--muted)' : '#fff';
     btn.style.borderColor = topBarVisible ? 'var(--border2)' : 'var(--accent)';
   });
+}
 
-}function moveCatUp(ci){
+function moveCatUp(ci){
   if(ci<=0)return;
   [categories[ci-1],categories[ci]]=[categories[ci],categories[ci-1]];
   saveCats();scheduleSave();renderCatModal();renderSidebar();
   showToast('⬆️ Catégorie déplacée !');
 }
-
 function moveCatDown(ci){
   if(ci>=categories.length-1)return;
   [categories[ci+1],categories[ci]]=[categories[ci],categories[ci+1]];
   saveCats();scheduleSave();renderCatModal();renderSidebar();
   showToast('⬇️ Catégorie déplacée !');
 }
+
 // ══════════════════════════════════════════
 //  FLASHBACK PANEL
 // ══════════════════════════════════════════
@@ -1224,76 +1214,50 @@ async function fetchFlashbackStreams(){
   const list = document.getElementById('flashbackList');
   const countEl = document.getElementById('flashbackCount');
   list.innerHTML = '<div class="flashback-empty">Recherche en cours…</div>';
-  
   try{
     if(!twitchToken) twitchToken = await getTwitchToken();
-    
-    // Cherche les streams avec FLASHBACK dans le titre
-    const r = await fetch(
-      'https://api.twitch.tv/helix/streams?first=100',
-      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}}
-    );
+    const r = await fetch('https://api.twitch.tv/helix/streams?first=100',
+      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
     const d = await r.json();
-    
-    // Filtre ceux qui ont FLASHBACK dans le titre
-    const flashbackStreams = (d.data||[]).filter(s => 
-      s.title && s.title.toUpperCase().includes('FLASHBACK')
-    );
-    
+    const flashbackStreams = (d.data||[]).filter(s =>
+      s.title && s.title.toUpperCase().includes('FLASHBACK'));
     countEl.textContent = flashbackStreams.length;
-    
     if(!flashbackStreams.length){
       list.innerHTML = '<div class="flashback-empty">Aucun stream FLASHBACK en live pour l\'instant 😴</div>';
       return;
     }
-    
-    // Récupère les avatars
     const logins = flashbackStreams.map(s => 'login='+s.user_login).join('&');
-    const rUsers = await fetch(
-      'https://api.twitch.tv/helix/users?'+logins,
-      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}}
-    );
+    const rUsers = await fetch('https://api.twitch.tv/helix/users?'+logins,
+      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
     const dUsers = await rUsers.json();
     const avatars = {};
     (dUsers.data||[]).forEach(u => { avatars[u.login.toLowerCase()] = u.profile_image_url; });
-    
     list.innerHTML = '';
-    
-    // Trie par viewers
     flashbackStreams.sort((a,b) => b.viewer_count - a.viewer_count);
-    
     flashbackStreams.forEach(s => {
       const login = s.user_login.toLowerCase();
       const avatar = avatars[login] || null;
       const isAdded = streamers.find(x => x.twitch === login);
-      
       const item = document.createElement('div');
       item.className = 'flashback-item';
-      
-      const avHtml = avatar 
+      const avHtml = avatar
         ? `<div class="flashback-av"><img src="${avatar}" alt="${s.user_name}"></div>`
         : `<div class="flashback-av-ph">${s.user_name[0]}</div>`;
-      
       item.innerHTML = `
         ${avHtml}
         <div class="flashback-info">
           <div class="flashback-name">${escHtml(s.user_name)}</div>
           <div class="flashback-viewers">👁 ${fmtV(s.viewer_count)} viewers</div>
         </div>
-        <button class="flashback-add ${isAdded?'added':''}" 
-          ${isAdded?'disabled':''} 
+        <button class="flashback-add ${isAdded?'added':''}"
+          ${isAdded?'disabled':''}
           onclick="event.stopPropagation();addFromFlashback('${login}','${escHtml(s.user_name)}','${avatar||''}',this)">
           ${isAdded?'✓':'+ Add'}
         </button>
       `;
-      
-      item.onclick = () => {
-        if(!selected.includes(login)) toggle(login);
-      };
-      
+      item.onclick = () => { if(!selected.includes(login)) toggle(login); };
       list.appendChild(item);
     });
-    
   }catch(e){
     list.innerHTML = '<div class="flashback-empty">Erreur de chargement 😢</div>';
     console.warn('Flashback:', e);
@@ -1301,22 +1265,20 @@ async function fetchFlashbackStreams(){
 }
 
 function addFromFlashback(twitch, nom, avatar, btn){
-  if(streamers.find(s => s.twitch === twitch)){
-    showToast(nom+' déjà dans ta liste !');
-    return;
-  }
+  if(streamers.find(s => s.twitch === twitch)){showToast(nom+' déjà dans ta liste !');return;}
   if(avatar) avatarCache[twitch] = avatar;
   streamers.push({twitch, nom});
-  render();
-  scheduleSave();
-  saveAvatars();
+  render();scheduleSave();saveAvatars();
   btn.textContent = '✓';
   btn.className = 'flashback-add added';
   btn.disabled = true;
   showToast('✅ '+nom+' ajouté !');
-}// ══════════════════════════════════════════
+}
+
+// ══════════════════════════════════════════
 //  MULTI-REDIFF
 // ══════════════════════════════════════════
+// CORRECTION : déclarations uniques (doublons supprimés)
 let selectedVods = [];
 const rediffPlayers = {};
 let rediffPaused = false;
@@ -1355,23 +1317,31 @@ async function openVodPanel(s){
   list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:.8rem">Chargement des rediffs…</div>';
   try{
     if(!twitchToken) twitchToken = await getTwitchToken();
-    const rUser = await fetch('https://api.twitch.tv/helix/users?login='+s.twitch,{headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
+    const rUser = await fetch('https://api.twitch.tv/helix/users?login='+s.twitch,
+      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
     const dUser = await rUser.json();
     if(!dUser.data||!dUser.data[0]){ list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px">Introuvable</div>'; return; }
     const userId = dUser.data[0].id;
-    const rVod = await fetch('https://api.twitch.tv/helix/videos?user_id='+userId+'&first=15&type=archive',{headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
+    const rVod = await fetch('https://api.twitch.tv/helix/videos?user_id='+userId+'&first=15&type=archive',
+      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
     const dVod = await rVod.json();
-    if(!dVod.data||!dVod.data.length){ list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;font-size:.8rem">Aucune rediff disponible 😴</div>'; return; }
+    if(!dVod.data||!dVod.data.length){
+      list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;font-size:.8rem">Aucune rediff disponible 😴</div>';
+      return;
+    }
     list.innerHTML = '';
     dVod.data.forEach(vod => {
-      const thumb = vod.thumbnail_url ? vod.thumbnail_url.replace('%{width}','280').replace('%{height}','158') : '';
+      const thumb = vod.thumbnail_url
+        ? vod.thumbnail_url.replace('%{width}','280').replace('%{height}','158')
+        : '';
       const date = new Date(vod.created_at).toLocaleDateString('fr-FR');
       const isSelected = selectedVods.find(v => v.vodId === vod.id);
       const item = document.createElement('div');
       item.style.cssText = `display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:9px;border:1px solid ${isSelected?'var(--online)':'var(--border)'};margin-bottom:8px;cursor:pointer;transition:all .14s;background:${isSelected?'rgba(34,197,94,.06)':'var(--card2)'}`;
       item.onmouseenter = () => { if(!isSelected) item.style.borderColor='var(--accent)'; };
       item.onmouseleave = () => { if(!isSelected) item.style.borderColor='var(--border)'; };
-      item.innerHTML = `${thumb?`<img src="${thumb}" style="width:100%;border-radius:6px;object-fit:cover;display:block;background:var(--bg)" alt="">`:''}
+      item.innerHTML = `
+        ${thumb?`<img src="${thumb}" style="width:100%;border-radius:6px;object-fit:cover;display:block;background:var(--bg)" alt="">` : ''}
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;color:var(--text)">${escHtml(vod.title)}</div>
         <div style="display:flex;align-items:center;justify-content:space-between">
           <span style="font-size:.65rem;color:var(--muted)">${date} · ${vod.duration}</span>
@@ -1379,7 +1349,8 @@ async function openVodPanel(s){
             onclick="event.stopPropagation();selectVod('${s.twitch}','${escHtml(s.nom)}','${vod.id}','${escHtml(vod.title).replace(/'/g,'\\\'')}',this)">
             ${isSelected?'✓ Sélectionnée':'+ Sélectionner'}
           </button>
-        </div>`;
+        </div>
+      `;
       list.appendChild(item);
     });
   }catch(e){
@@ -1394,9 +1365,14 @@ function closeVodPanel(){
 function selectVod(twitch, nom, vodId, vodTitle, btn){
   selectedVods = selectedVods.filter(v => v.twitch !== twitch);
   const wasSelected = btn.textContent.includes('✓');
-  if(!wasSelected){ selectedVods.push({twitch, nom, vodId, vodTitle}); showToast('📼 '+nom+' ajouté !'); }
-  else { showToast('🗑 '+nom+' retiré !'); }
-  renderRediffChips(); renderRediffSidebar();
+  if(!wasSelected){
+    selectedVods.push({twitch, nom, vodId, vodTitle});
+    showToast('📼 '+nom+' ajouté !');
+  } else {
+    showToast('🗑 '+nom+' retiré !');
+  }
+  renderRediffChips();
+  renderRediffSidebar();
   const s = streamers.find(x => x.twitch === twitch);
   if(s) openVodPanel(s);
 }
@@ -1406,9 +1382,12 @@ function renderRediffChips(){
   const btn = document.getElementById('btnLaunchRediff');
   if(!selectedVods.length){
     area.innerHTML = '<span style="font-size:.72rem;color:var(--muted);font-style:italic">Sélectionne des VODs…</span>';
-    btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; return;
+    btn.style.opacity = '.4';
+    btn.style.pointerEvents = 'none';
+    return;
   }
-  btn.style.opacity = '1'; btn.style.pointerEvents = 'all';
+  btn.style.opacity = '1';
+  btn.style.pointerEvents = 'all';
   area.innerHTML = '';
   selectedVods.forEach(v => {
     const chip = document.createElement('div');
@@ -1420,27 +1399,30 @@ function renderRediffChips(){
 
 function removeRediffVod(twitch){
   selectedVods = selectedVods.filter(v => v.twitch !== twitch);
-  renderRediffChips(); renderRediffSidebar();
+  renderRediffChips();
+  renderRediffSidebar();
   if(!selectedVods.length) stopRediff();
 }
 
 function clearRediff(){
   selectedVods = [];
-  renderRediffChips(); renderRediffSidebar();
+  renderRediffChips();
+  renderRediffSidebar();
   stopRediff();
 }
 
 function stopRediff(){
   Object.keys(rediffPlayers).forEach(k => delete rediffPlayers[k]);
-  rediffPaused = false; rediffMuted = false;
+  rediffPaused = false;
+  rediffMuted = false;
   const area = document.getElementById('rediffArea');
-  area.style.display = 'none';
-  area.innerHTML = '';
+  if(area){ area.style.display = 'none'; area.innerHTML = ''; }
   const layout = document.getElementById('rediffLayout');
   if(layout) layout.innerHTML = '';
   document.getElementById('rediffWelcome').style.display = 'flex';
 }
 
+// CORRECTION : une seule définition de launchRediff
 function launchRediff(){
   if(!selectedVods.length) return;
   const welcome = document.getElementById('rediffWelcome');
@@ -1494,7 +1476,8 @@ function launchRediff(){
     const mainLabel = document.createElement('div');
     mainLabel.style.cssText = 'position:absolute;top:6px;left:6px;padding:2px 8px;border-radius:4px;background:rgba(124,58,237,.85);font-family:\'Barlow Condensed\',sans-serif;font-size:.68rem;font-weight:700;color:#fff;pointer-events:none;z-index:2';
     mainLabel.innerHTML = '★ '+escHtml(selectedVods[0].nom);
-    mainPane.appendChild(mainDiv); mainPane.appendChild(mainLabel);
+    mainPane.appendChild(mainDiv);
+    mainPane.appendChild(mainLabel);
 
     const vsplitter = document.createElement('div');
     vsplitter.style.cssText = 'width:4px;flex-shrink:0;background:rgba(255,255,255,.04);border-left:1px solid var(--border)';
@@ -1510,7 +1493,9 @@ function launchRediff(){
       box.appendChild(div); box.appendChild(label); secPane.appendChild(box);
     });
 
-    layout.appendChild(mainPane); layout.appendChild(vsplitter); layout.appendChild(secPane);
+    layout.appendChild(mainPane);
+    layout.appendChild(vsplitter);
+    layout.appendChild(secPane);
 
     setTimeout(()=>{
       selectedVods.forEach((v,i)=>{
@@ -1555,411 +1540,4 @@ function rediffSync(){
     selectedVods.slice(1).forEach(v => { const p=rediffPlayers[v.twitch]; if(p) p.seek(t); });
     showToast('🔄 VODs synchronisées !');
   }catch(e){ showToast('⚠️ Sync impossible'); }
-
 }
-
-async function openVodPanel(s){
-  const panel = document.getElementById('vodPanel');
-  const title = document.getElementById('vodPanelTitle');
-  const list = document.getElementById('vodPanelList');
-  
-  panel.style.display = 'flex';
-  title.textContent = '📼 ' + s.nom;
-  list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:.8rem">Chargement des rediffs…</div>';
-
-  try{
-    if(!twitchToken) twitchToken = await getTwitchToken();
-    
-    const rUser = await fetch('https://api.twitch.tv/helix/users?login='+s.twitch,
-      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
-    const dUser = await rUser.json();
-    if(!dUser.data||!dUser.data[0]){ list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px">Introuvable</div>'; return; }
-    const userId = dUser.data[0].id;
-
-    const rVod = await fetch('https://api.twitch.tv/helix/videos?user_id='+userId+'&first=15&type=archive',
-      {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
-    const dVod = await rVod.json();
-
-    if(!dVod.data||!dVod.data.length){
-      list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;font-size:.8rem">Aucune rediff disponible 😴</div>';
-      return;
-    }
-
-    list.innerHTML = '';
-    dVod.data.forEach(vod => {
-      const thumb = vod.thumbnail_url
-        ? vod.thumbnail_url.replace('%{width}','280').replace('%{height}','158')
-        : '';
-      const date = new Date(vod.created_at).toLocaleDateString('fr-FR');
-      const isSelected = selectedVods.find(v => v.vodId === vod.id);
-
-      const item = document.createElement('div');
-      item.style.cssText = `display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:9px;border:1px solid ${isSelected?'var(--online)':'var(--border)'};margin-bottom:8px;cursor:pointer;transition:all .14s;background:${isSelected?'rgba(34,197,94,.06)':'var(--card2)'}`;
-      item.onmouseenter = () => { if(!isSelected) item.style.borderColor='var(--accent)'; };
-      item.onmouseleave = () => { if(!isSelected) item.style.borderColor='var(--border)'; };
-
-      item.innerHTML = `
-        ${thumb?`<img src="${thumb}" style="width:100%;border-radius:6px;object-fit:cover;display:block;background:var(--bg)" alt="">` : ''}
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;color:var(--text)">${escHtml(vod.title)}</div>
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:.65rem;color:var(--muted)">${date} · ${vod.duration}</span>
-          <button style="padding:3px 10px;border-radius:5px;background:${isSelected?'rgba(34,197,94,.12)':'rgba(124,58,237,.18)'};border:1px solid ${isSelected?'var(--online)':'var(--accent)'};color:${isSelected?'var(--online)':'var(--accent2)'};font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;cursor:pointer"
-            onclick="event.stopPropagation();selectVod('${s.twitch}','${escHtml(s.nom)}','${vod.id}','${escHtml(vod.title).replace(/'/g,'\\\'')}',this)">
-            ${isSelected?'✓ Sélectionnée':'+ Sélectionner'}
-          </button>
-        </div>
-      `;
-      list.appendChild(item);
-    });
-
-  }catch(e){
-    list.innerHTML = '<div style="text-align:center;color:var(--live);padding:20px;font-size:.8rem">Erreur 😢</div>';
-  }
-}
-
-function closeVodPanel(){
-  document.getElementById('vodPanel').style.display = 'none';
-}
-
-function selectVod(twitch, nom, vodId, vodTitle, btn){
-  // Retire l'ancienne VOD de ce streameur si déjà sélectionnée
-  selectedVods = selectedVods.filter(v => v.twitch !== twitch);
-  
-  const wasSelected = btn.textContent.includes('✓');
-  if(!wasSelected){
-    selectedVods.push({twitch, nom, vodId, vodTitle});
-    showToast('📼 '+nom+' ajouté !');
-  } else {
-    showToast('🗑 '+nom+' retiré !');
-  }
-  
-  renderRediffChips();
-  renderRediffSidebar();
-  
-  // Refresh le panel
-  const s = streamers.find(x => x.twitch === twitch);
-  if(s) openVodPanel(s);
-}
-
-function renderRediffChips(){
-  const area = document.getElementById('rediffChips');
-  const btn = document.getElementById('btnLaunchRediff');
-  
-  if(!selectedVods.length){
-    area.innerHTML = '<span style="font-size:.72rem;color:var(--muted);font-style:italic">Sélectionne des VODs…</span>';
-    btn.style.opacity = '.4';
-    btn.style.pointerEvents = 'none';
-    return;
-  }
-  
-  btn.style.opacity = '1';
-  btn.style.pointerEvents = 'all';
-  area.innerHTML = '';
-  
-  selectedVods.forEach(v => {
-    const chip = document.createElement('div');
-    chip.style.cssText = 'display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:18px;border:1px solid var(--border);background:var(--card);font-size:.72rem;font-weight:700;font-family:\'Barlow Condensed\',sans-serif;flex-shrink:0';
-    chip.innerHTML = `${escHtml(v.nom)} <button onclick="removeRediffVod('${v.twitch}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.68rem;padding:0;line-height:1">✕</button>`;
-    area.appendChild(chip);
-  });
-}
-
-function removeRediffVod(twitch){
-  selectedVods = selectedVods.filter(v => v.twitch !== twitch);
-  renderRediffChips();
-  renderRediffSidebar();
-  if(!selectedVods.length) stopRediff();
-}
-
-function clearRediff(){
-  selectedVods = [];
-  renderRediffChips();
-  renderRediffSidebar();
-  stopRediff();
-}
-
-function stopRediff(){
-  document.getElementById('rediffArea').style.display = 'none';
-  document.getElementById('rediffWelcome').style.display = 'flex';
-  document.getElementById('rediffLayout').innerHTML = '';
-}
-
-// ══════════════════════════════════════════
-//  REDIFF PLAYERS & SYNC
-// ══════════════════════════════════════════
-const rediffPlayers = {}; // {twitch: Twitch.Player}
-
-// ══════════════════════════════════════════
-//  REDIFF PLAYERS & SYNC
-// ══════════════════════════════════════════
-const rediffPlayers = {}; // {twitch: Twitch.Player}
-
-function launchRediff(){
-  if(!selectedVods.length) return;
-  
-  const welcome = document.getElementById('rediffWelcome');
-  const area = document.getElementById('rediffArea');
-  const layout = document.getElementById('rediffLayout');
-  
-  welcome.style.display = 'none';
-  area.style.display = 'flex';
-  layout.innerHTML = '';
-  Object.keys(rediffPlayers).forEach(k => delete rediffPlayers[k]);
-
-  layout.style.cssText = 'display:flex;width:100%;height:calc(100% - 48px);background:#000;overflow:hidden';
-
-  // Barre de contrôles globaux rediff
-  const ctrlBar = document.createElement('div');
-  ctrlBar.id = 'rediffCtrlBar';
-  ctrlBar.style.cssText = 'position:absolute;top:0;left:0;right:0;height:48px;background:rgba(8,8,15,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 14px;z-index:10;flex-shrink:0';
-  ctrlBar.innerHTML = `
-    <span style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">📼 MULTI-REDIFF</span>
-    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;background:var(--card2);border:1px solid var(--border);border-radius:8px">
-      <button id="rdPlay" onclick="rediffPlayPause()" style="width:28px;height:28px;border-radius:5px;border:1px solid var(--border2);background:var(--card);color:var(--text);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .14s" title="Play/Pause">⏸</button>
-      <button id="rdMute" onclick="rediffMuteAll()" style="width:28px;height:28px;border-radius:5px;border:1px solid var(--border2);background:var(--card);color:var(--text);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .14s" title="Mute">🔊</button>
-      <div style="width:1px;height:18px;background:var(--border);margin:0 2px"></div>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;color:var(--muted)">🔈</span>
-      <input type="range" min="0" max="100" value="80" oninput="rediffVolumeAll(this.value)" style="width:70px;height:3px;accent-color:var(--accent);cursor:pointer" title="Volume">
-      <div style="width:1px;height:18px;background:var(--border);margin:0 2px"></div>
-      <button onclick="rediffSync()" style="padding:3px 10px;border-radius:5px;background:rgba(124,58,237,.18);border:1px solid var(--accent);color:var(--accent2);font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;cursor:pointer;transition:all .14s" title="Synchroniser toutes les VODs sur le stream principal">🔄 Sync</button>
-    </div>
-    <div style="flex:1"></div>
-    <div style="display:flex;gap:4px">
-      ${selectedVods.map((v,i)=>`<div style="padding:2px 8px;border-radius:10px;background:${i===0?'rgba(124,58,237,.25)':'rgba(255,255,255,.06)'};border:1px solid ${i===0?'var(--accent)':'var(--border)'};font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;color:${i===0?'var(--accent2)':'var(--muted)'}">${escHtml(v.nom)}</div>`).join('')}
-    </div>
-    <button onclick="stopRediff()" style="padding:4px 11px;border-radius:5px;border:1px solid var(--border2);background:var(--card);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .14s">✕ Stop</button>
-  `;
-  area.style.position = 'relative';
-  area.appendChild(ctrlBar);
-
-  if(selectedVods.length === 1){
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'width:100%;height:100%;display:flex';
-    const div = document.createElement('div');
-    div.id = 'rdplayer-'+selectedVods[0].twitch;
-    div.style.cssText = 'flex:1;height:100%';
-    wrap.appendChild(div);
-    layout.appendChild(wrap);
-    setTimeout(()=>{
-      rediffPlayers[selectedVods[0].twitch] = new Twitch.Player('rdplayer-'+selectedVods[0].twitch,{
-        video: selectedVods[0].vodId, parent:[PARENT], autoplay:true, muted:false, width:'100%', height:'100%'
-      });
-    },100);
-  } else {
-    const mainPane = document.createElement('div');
-    mainPane.style.cssText = 'width:62%;height:100%;position:relative;flex-shrink:0;background:#0a0a14';
-    const mainDiv = document.createElement('div');
-    mainDiv.id = 'rdplayer-'+selectedVods[0].twitch;
-    mainDiv.style.cssText = 'width:100%;height:100%';
-    const mainLabel = document.createElement('div');
-    mainLabel.style.cssText = 'position:absolute;top:6px;left:6px;padding:2px 8px;border-radius:4px;background:rgba(124,58,237,.85);font-family:\'Barlow Condensed\',sans-serif;font-size:.68rem;font-weight:700;color:#fff;pointer-events:none;z-index:2;display:flex;align-items:center;gap:4px';
-    mainLabel.innerHTML = '★ '+escHtml(selectedVods[0].nom);
-    mainPane.appendChild(mainDiv);
-    mainPane.appendChild(mainLabel);
-
-    const vsplitter = document.createElement('div');
-    vsplitter.style.cssText = 'width:4px;flex-shrink:0;background:rgba(255,255,255,.04);border-left:1px solid var(--border);cursor:col-resize';
-
-    const secPane = document.createElement('div');
-    secPane.style.cssText = 'flex:1;display:flex;flex-direction:column;overflow:hidden;background:#000';
-
-    selectedVods.slice(1).forEach((v,i)=>{
-      if(i>0){
-        const hs = document.createElement('div');
-        hs.style.cssText = 'height:4px;flex-shrink:0;background:rgba(255,255,255,.04);border-top:1px solid var(--border)';
-        secPane.appendChild(hs);
-      }
-      const box = document.createElement('div');
-      box.style.cssText = 'flex:1;position:relative;background:#0a0a14;min-height:60px';
-      const div = document.createElement('div');
-      div.id = 'rdplayer-'+v.twitch;
-      div.style.cssText = 'width:100%;height:100%';
-      const label = document.createElement('div');
-      label.style.cssText = 'position:absolute;top:6px;left:6px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.75);font-family:\'Barlow Condensed\',sans-serif;font-size:.68rem;font-weight:700;color:#fff;pointer-events:none;z-index:2';
-      label.textContent = v.nom;
-      box.appendChild(div);
-      box.appendChild(label);
-      secPane.appendChild(box);
-    });
-
-    layout.appendChild(mainPane);
-    layout.appendChild(vsplitter);
-    layout.appendChild(secPane);
-
-    setTimeout(()=>{
-      selectedVods.forEach((v,i)=>{
-        rediffPlayers[v.twitch] = new Twitch.Player('rdplayer-'+v.twitch,{
-          video: v.vodId, parent:[PARENT], autoplay:true, muted:i>0, width:'100%', height:'100%'
-        });
-      });
-    },100);
-  }
-
-  closeVodPanel();
-  showToast('📼 Multi-rediff lancé !');
-}
-
-let rediffPaused = false;
-let rediffMuted = false;
-
-function rediffPlayPause(){
-  rediffPaused = !rediffPaused;
-  const btn = document.getElementById('rdPlay');
-  Object.values(rediffPlayers).forEach(p => { rediffPaused ? p.pause() : p.play(); });
-  if(btn) btn.textContent = rediffPaused ? '▶' : '⏸';
-  showToast(rediffPaused ? '⏸ Pause' : '▶ Lecture');
-}
-
-function rediffMuteAll(){
-  rediffMuted = !rediffMuted;
-  const btn = document.getElementById('rdMute');
-  Object.values(rediffPlayers).forEach(p => p.setMuted(rediffMuted));
-  if(btn) btn.textContent = rediffMuted ? '🔇' : '🔊';
-  showToast(rediffMuted ? '🔇 Mutés' : '🔊 Son activé');
-}
-
-function rediffVolumeAll(val){
-  const v = parseInt(val)/100;
-  Object.values(rediffPlayers).forEach(p => { p.setVolume(v); p.setMuted(v===0); });
-}
-
-function rediffSync(){
-  if(!selectedVods.length) return;
-  const main = rediffPlayers[selectedVods[0].twitch];
-  if(!main) return;
-  try {
-    const t = main.getCurrentTime();
-    selectedVods.slice(1).forEach(v => {
-      const p = rediffPlayers[v.twitch];
-      if(p) p.seek(t);
-    });
-    showToast('🔄 VODs synchronisées !');
-  } catch(e) {
-    showToast('⚠️ Sync impossible (VODs pas encore chargées)');
-  }
-}
-
-function stopRediff(){
-  Object.keys(rediffPlayers).forEach(k => delete rediffPlayers[k]);
-  rediffPaused = false;
-  rediffMuted = false;
-  document.getElementById('rediffArea').style.display = 'none';
-  document.getElementById('rediffArea').innerHTML = '';
-  const layout = document.getElementById('rediffLayout');
-  if(layout) layout.innerHTML = '';
-  document.getElementById('rediffWelcome').style.display = 'flex';
-}
-  if(!selectedVods.length) return;
-  
-  const welcome = document.getElementById('rediffWelcome');
-  const area = document.getElementById('rediffArea');
-  const layout = document.getElementById('rediffLayout');
-  
-  welcome.style.display = 'none';
-  area.style.display = 'flex';
-  layout.innerHTML = '';
-  Object.keys(rediffPlayers).forEach(k => delete rediffPlayers[k]);
-
-  layout.style.cssText = 'display:flex;width:100%;height:calc(100% - 48px);background:#000;overflow:hidden';
-
-  // Barre de contrôles globaux rediff
-  const ctrlBar = document.createElement('div');
-  ctrlBar.id = 'rediffCtrlBar';
-  ctrlBar.style.cssText = 'position:absolute;top:0;left:0;right:0;height:48px;background:rgba(8,8,15,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 14px;z-index:10;flex-shrink:0';
-  ctrlBar.innerHTML = `
-    <span style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">📼 MULTI-REDIFF</span>
-    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;background:var(--card2);border:1px solid var(--border);border-radius:8px">
-      <button id="rdPlay" onclick="rediffPlayPause()" style="width:28px;height:28px;border-radius:5px;border:1px solid var(--border2);background:var(--card);color:var(--text);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .14s" title="Play/Pause">⏸</button>
-      <button id="rdMute" onclick="rediffMuteAll()" style="width:28px;height:28px;border-radius:5px;border:1px solid var(--border2);background:var(--card);color:var(--text);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .14s" title="Mute">🔊</button>
-      <div style="width:1px;height:18px;background:var(--border);margin:0 2px"></div>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;color:var(--muted)">🔈</span>
-      <input type="range" min="0" max="100" value="80" oninput="rediffVolumeAll(this.value)" style="width:70px;height:3px;accent-color:var(--accent);cursor:pointer" title="Volume">
-      <div style="width:1px;height:18px;background:var(--border);margin:0 2px"></div>
-      <button onclick="rediffSync()" style="padding:3px 10px;border-radi
-  if(!selectedVods.length) return;
-  
-  const welcome = document.getElementById('rediffWelcome');
-  const area = document.getElementById('rediffArea');
-  const layout = document.getElementById('rediffLayout');
-  
-  welcome.style.display = 'none';
-  area.style.display = 'block';
-  layout.innerHTML = '';
-  layout.style.cssText = 'display:flex;width:100%;height:100%;background:#000;overflow:hidden';
-
-  if(selectedVods.length === 1){
-    // Solo
-    const iframe = document.createElement('iframe');
-    iframe.src = `    iframe.allowFullscreen = true;
-    iframe.setAttribute('allow','autoplay');
-    layout.appendChild(iframe);
-    {
-    // Multi-pov
-    const mainPow = 62;
-    
-    // Pane principale
-    const mainPane = document.createElement('div');
-    mainPane.style.cssText = `width:${mainPow}%;height:100%;position:relative;flex-shrink:0;background:#0a0a14`;
-    
-    const mainIframe = document.createElement('iframe');
-    mainIframe.src = `https://player.twitch.tv/?video=${selectedVods[0].vodId}&parent=${PARENT}&autoplay=true`;
-    mainIframe.style.cssText = 'width:100%;height:100%;border:none;display:block';
-    mainIframe.allowFullscreen = true;
-    mainIframe.setAttribute('allow','autoplay');
-    
-    const mainLabel = document.createElement('div');
-    mainLabel.style.cssText = 'position:absolute;top:6px;left:6px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.75);font-family:\'Barlow Condensed\',sans-serif;font-size:.68rem;font-weight:700;color:#fff;pointer-events:none;z-index:2';
-    mainLabel.textContent = selectedVods[0].nom;
-    
-    mainPane.appendChild(mainIframe);
-    mainPane.appendChild(mainLabel);
-    
-    // Splitter
-    const vsplitter = document.createElement('div');
-    vsplitter.style.cssText = 'width:4px;flex-shrink:0;background:rgba(255,255,255,.04);border-left:1px solid var(--border)';
-    
-    // Pane secondaire
-    const secPane = document.createElement('div');
-    secPane.style.cssText = 'flex:1;display:flex;flex-direction:column;overflow:hidden;background:#000';
-    
-    selectedVods.slice(1).forEach((v, i) => {
-      if(i > 0){
-        const hsplit = document.createElement('div');
-        hsplit.style.cssText = 'height:4px;flex-shrink:0;background:rgba(255,255,255,.04);border-top:1px solid var(--border)';
-        secPane.appendChild(hsplit);
-      }
-      
-      const box = document.createElement('div');
-      box.style.cssText = 'flex:1;position:relative;background:#0a0a14;min-height:60px';
-      
-      const iframe = document.createElement('iframe');
-      iframe.src = `https://player.twitch.tv/?video=${v.vodId}&parent=${PARENT}&autoplay=true&muted=true`;
-      iframe.style.cssText = 'width:100%;height:100%;border:none;display:block';
-      iframe.allowFullscreen = true;
-      iframe.setAttribute('allow','autoplay');
-      
-      const label = document.createElement('div');
-      label.style.cssText = 'position:absolute;top:6px;left:6px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.75);font-family:\'Barlow Condensed\',sans-serif;font-size:.68rem;font-weight:700;color:#fff;pointer-events:none;z-index:2';
-      label.textContent = v.nom;
-      
-      box.appendChild(iframe);
-      box.appendChild(label);
-      secPane.appendChild(box);
-    });
-    
-    layout.appendChild(mainPane);
-    layout.appendChild(vsplitter);
-    layout.appendChild(secPane);
-  }
-  
-  closeVodPanel();
-  showToast('📼 Multi-rediff lancé !');
-
-
-
-
-
-
-    
- 
-
