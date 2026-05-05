@@ -1365,7 +1365,12 @@ async function fetchFlashbackStreams(){
     if(!twitchToken)twitchToken=await getTwitchToken();
     const r=await fetch('https://api.twitch.tv/helix/streams?first=100',{headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
     const d=await r.json();
-    const flashbackStreams=(d.data||[]).filter(s=>s.title&&s.title.toUpperCase().includes('FLASHBACK'));
+    const FLASHBACK_KEYWORDS=['flashback','flash back','jltomy','fivem rp','gta rp','roleplay','rp fr'];
+const flashbackStreams=(d.data||[]).filter(s=>{
+  if(!s.game_name||!s.game_name.toLowerCase().includes('grand theft'))return false;
+  const title=(s.title||'').toLowerCase();
+  return FLASHBACK_KEYWORDS.some(kw=>title.includes(kw));
+});
     countEl.textContent=flashbackStreams.length;
     if(!flashbackStreams.length){list.innerHTML='<div class="flashback-empty">Aucun stream FLASHBACK en live pour l\'instant 😴</div>';return;}
     const logins=flashbackStreams.map(s=>'login='+s.user_login).join('&');
@@ -1545,4 +1550,139 @@ function rediffSync(){
   if(!main){showToast('⚠️ Player pas encore chargé');return;}
   try{const t=main.getCurrentTime();selectedVods.slice(1).forEach(v=>{const p=rediffPlayers[v.twitch];if(p)p.seek(t);});showToast('🔄 VODs synchronisées !');}
   catch(e){showToast('⚠️ Sync impossible');}
+}
+// ══════════════════════════════════════════
+//  PROFILE PANEL
+// ══════════════════════════════════════════
+function openProfilePanel(){
+  if(!currentUser)return;
+  const panel=document.getElementById('profilePanel');
+  panel.style.display='flex';
+
+  // Remplir les champs
+  document.getElementById('profileUsername').value=currentUser.displayName||'';
+  document.getElementById('profileEmail').value=currentUser.email||'';
+  document.getElementById('profileError').style.display='none';
+  document.getElementById('profileSuccess').style.display='none';
+
+  // Stats
+  document.getElementById('profileStatStreamers').textContent=streamers.length;
+  document.getElementById('profileStatCats').textContent=categories.length;
+
+  // Avatar
+  updateProfileAvatar();
+
+  // Grade
+  const db=window._db,fb=window._fb;
+  if(db&&fb){
+    fb.getDoc(fb.doc(db,'users',currentUser.uid)).then(snap=>{
+      if(snap.exists()){
+        const g=getGrade(snap.data().grade||'member');
+        const badge=document.getElementById('profileGradeBadge');
+        badge.textContent=g.label;
+        badge.style.cssText=`background:${g.bg};border:1px solid ${g.border};color:${g.color}`;
+      }
+    });
+  }
+}
+
+function closeProfilePanel(){
+  document.getElementById('profilePanel').style.display='none';
+}
+
+// Fermer en cliquant dehors
+document.getElementById('profilePanel').addEventListener('click',function(e){
+  if(e.target===this)closeProfilePanel();
+});
+
+function updateProfileAvatar(){
+  const big=document.getElementById('profileAvatarBig');
+  const small=document.getElementById('userAvatar');
+  const pp=localStorage.getItem('ms_pp_'+currentUser?.uid);
+  if(pp){
+    big.innerHTML=`<img src="${pp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    small.innerHTML=`<img src="${pp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  }else{
+    const letter=(currentUser?.displayName||currentUser?.email||'?')[0].toUpperCase();
+    big.textContent=letter;
+    small.textContent=letter;
+  }
+}
+
+function handlePPUpload(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  if(file.size>2*1024*1024){profileMsg('error','Image trop lourde (max 2MB)');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const base64=e.target.result;
+    localStorage.setItem('ms_pp_'+currentUser.uid,base64);
+    updateProfileAvatar();
+    profileMsg('success','✅ Photo de profil mise à jour !');
+  };
+  reader.readAsDataURL(file);
+}
+
+function applyPPUrl(){
+  const url=document.getElementById('ppUrlInput').value.trim();
+  if(!url){profileMsg('error','URL vide !');return;}
+  localStorage.setItem('ms_pp_'+currentUser.uid,url);
+  updateProfileAvatar();
+  profileMsg('success','✅ Photo de profil mise à jour !');
+}
+
+async function saveUsername(){
+  const name=document.getElementById('profileUsername').value.trim();
+  if(!name){profileMsg('error','Pseudo vide !');return;}
+  try{
+    await window._fb.updateProfile(currentUser,{displayName:name});
+    await cloudSaveData(currentUser.uid,{displayName:name});
+    document.getElementById('userName').textContent=name;
+    document.getElementById('userAvatar').textContent=name[0].toUpperCase();
+    updateProfileAvatar();
+    profileMsg('success','✅ Pseudo mis à jour !');
+  }catch(e){profileMsg('error','Erreur : '+e.message);}
+}
+
+async function saveEmail(){
+  const email=document.getElementById('profileEmail').value.trim();
+  if(!email){profileMsg('error','Email vide !');return;}
+  try{
+    await currentUser.updateEmail(email);
+    profileMsg('success','✅ Email mis à jour !');
+  }catch(e){
+    if(e.code==='auth/requires-recent-login')profileMsg('error','Reconnecte-toi d\'abord pour changer l\'email.');
+    else profileMsg('error','Erreur : '+e.message);
+  }
+}
+
+async function savePassword(){
+  const oldPw=document.getElementById('profilePwOld').value;
+  const newPw=document.getElementById('profilePwNew').value;
+  const confirmPw=document.getElementById('profilePwConfirm').value;
+  if(!oldPw||!newPw||!confirmPw){profileMsg('error','Remplis tous les champs !');return;}
+  if(newPw!==confirmPw){profileMsg('error','Les mots de passe ne correspondent pas !');return;}
+  if(newPw.length<6){profileMsg('error','Minimum 6 caractères !');return;}
+  try{
+    const {EmailAuthProvider,reauthenticateWithCredential,updatePassword}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    const cred=EmailAuthProvider.credential(currentUser.email,oldPw);
+    await reauthenticateWithCredential(currentUser,cred);
+    await updatePassword(currentUser,newPw);
+    document.getElementById('profilePwOld').value='';
+    document.getElementById('profilePwNew').value='';
+    document.getElementById('profilePwConfirm').value='';
+    profileMsg('success','✅ Mot de passe changé !');
+  }catch(e){
+    if(e.code==='auth/wrong-password')profileMsg('error','Mot de passe actuel incorrect !');
+    else profileMsg('error','Erreur : '+e.message);
+  }
+}
+
+function profileMsg(type,msg){
+  const err=document.getElementById('profileError');
+  const suc=document.getElementById('profileSuccess');
+  err.style.display='none';suc.style.display='none';
+  if(type==='error'){err.textContent=msg;err.style.display='block';}
+  else{suc.textContent=msg;suc.style.display='block';}
+  setTimeout(()=>{err.style.display='none';suc.style.display='none';},3500);
 }
