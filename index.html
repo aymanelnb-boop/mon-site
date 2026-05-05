@@ -693,6 +693,66 @@
   </div>
 </div>
 </div>
+<!-- PROFILE PANEL -->
+<div id="profilePanel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;align-items:center;justify-content:center;backdrop-filter:blur(10px)">
+  <div style="background:var(--card);border:1px solid var(--border2);border-radius:16px;width:480px;max-width:96vw;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 0 60px rgba(124,58,237,.12)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--border);background:var(--card2);flex-shrink:0">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:3px;color:var(--accent2)">Mon Profil</span>
+      <button onclick="closeProfilePanel()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div style="padding:18px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div id="profileAvatarBig" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#f59e0b);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden;cursor:pointer;border:2px solid var(--accent)" onclick="document.getElementById('ppFileInput').click()"></div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+          <input type="file" id="ppFileInput" accept="image/*" style="display:none" onchange="handlePPUpload(event)">
+          <button onclick="document.getElementById('ppFileInput').click()" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--card2);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;width:fit-content">📁 Importer une photo</button>
+          <div style="display:flex;gap:5px">
+            <input id="ppUrlInput" placeholder="URL d'une image…" style="flex:1;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;outline:none">
+            <button onclick="applyPPUrl()" style="padding:5px 9px;border-radius:6px;border:1px solid var(--accent);background:rgba(124,58,237,.15);color:var(--accent2);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer">OK</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:9px;text-align:center">
+          <div id="profileStatStreamers" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--accent2)">0</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Streameurs</div>
+        </div>
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:9px;text-align:center">
+          <div id="profileStatCats" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--accent2)">0</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Catégories</div>
+        </div>
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:9px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+          <span id="profileGradeBadge" style="padding:3px 10px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:800;letter-spacing:1px"></span>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Grade</div>
+        </div>
+      </div>
+      <div id="profileError" style="display:none;padding:9px 12px;border-radius:8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#fca5a5;font-size:.78rem;font-family:'Barlow Condensed',sans-serif;font-weight:600"></div>
+      <div id="profileSuccess" style="display:none;padding:9px 12px;border-radius:8px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#86efac;font-size:.78rem;font-family:'Barlow Condensed',sans-serif;font-weight:600"></div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Pseudo</label>
+        <div style="display:flex;gap:6px">
+          <input id="profileUsername" placeholder="TonPseudo" style="flex:1;padding:8px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.88rem;outline:none">
+          <button onclick="saveUsername()" style="padding:8px 13px;border-radius:7px;background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">Sauvegarder</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Email</label>
+        <div style="display:flex;gap:6px">
+          <input id="profileEmail" type="email" placeholder="ton@email.com" style="flex:1;padding:8px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.88rem;outline:none">
+          <button onclick="saveEmail()" style="padding:8px 13px;border-radius:7px;background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">Sauvegarder</button>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:13px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:1px;color:var(--accent2)">Changer le mot de passe</div>
+        <input id="profilePwOld" type="password" placeholder="Mot de passe actuel" style="padding:8px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.88rem;outline:none">
+        <input id="profilePwNew" type="password" placeholder="Nouveau mot de passe" style="padding:8px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.88rem;outline:none">
+        <input id="profilePwConfirm" type="password" placeholder="Confirmer le mot de passe" style="padding:8px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.88rem;outline:none">
+        <button onclick="savePassword()" style="padding:10px;border-radius:9px;background:var(--card2);border:1px solid var(--border2);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer">🔒 Changer le mot de passe</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- OWNER PANEL -->
 <div id="ownerPanel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;align-items:center;justify-content:center;backdrop-filter:blur(10px)" onclick="if(event.target===this)closeOwnerPanel()">
   <div style="background:var(--card);border:1px solid rgba(245,158,11,.5);border-radius:16px;width:560px;max-width:96vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 60px rgba(245,158,11,.12)">
