@@ -1718,6 +1718,8 @@ function updateSidebarProfile() {
   }
   const card = document.getElementById('sidebarProfileCard');
   card.style.display = 'block';
+  const sideGradeBtn = document.getElementById('sideGradeBtn');
+  if (sideGradeBtn) sideGradeBtn.style.display = isOwner ? 'flex' : 'none';
   // Avatar
   const pp = localStorage.getItem('ms_pp_' + currentUser.uid);
   const av = document.getElementById('sideProfileAv');
