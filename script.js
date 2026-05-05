@@ -269,9 +269,7 @@ async function doLogout(){
   if(firestoreUnsub){firestoreUnsub();firestoreUnsub=null;}
   await fb.signOut(auth);currentUser=null;streamers=[];selected=[];categories=[];isOwner=false;
   document.getElementById('authOverlay').classList.remove('hidden');
-  document.getElementById('userPanel').style.display='none';
-  const odd=document.getElementById('ownerDropItem');if(odd)odd.style.display='none';
-  document.getElementById('gradeBadgeHeader').classList.remove('show');
+ // supprimé
   showToast('👋 Déconnecté');
 }
 
@@ -298,13 +296,9 @@ function listenUser(uid){
       if(data.streamers)streamers=[...data.streamers];
       if(data.avatars)avatarCache={...data.avatars};
       if(data.categories)categories=[...data.categories];
-      if(data.grade){
-        const g=getGrade(data.grade);
-        const el=document.getElementById('gradeBadgeHeader');
-        el.textContent=g.label;
-        el.style.cssText=`background:${g.bg};border:1px solid ${g.border};color:${g.color}`;
-        if(isOwner)el.classList.add('show');
-      }
+     if(data.grade){
+  // grade géré dans updateSidebarProfile
+}
       render();renderPopularGrid();updateSidebarProfile();
     }
   });
@@ -381,14 +375,9 @@ window._initApp = function(){
     clearTimeout(timeout);
     if(user){
       currentUser=user;isOwner=(user.email===OWNER_EMAIL);
-if(isOwner){const el=document.getElementById('ownerDropItem');if(el)el.style.display='block';}
       document.getElementById('authOverlay').classList.add('hidden');
       document.getElementById('loadingScreen').classList.add('hidden');
-      const up=document.getElementById('userPanel');if(up)up.style.display='flex';
-      document.getElementById('userAvatar').textContent=(user.displayName||user.email||'?')[0].toUpperCase();
-      document.getElementById('userName').textContent=user.displayName||user.email||'';
       if(isOwner){
-        const odd=document.getElementById('ownerDropItem');if(odd)odd.style.display='block';
         try{
           const db=window._db,fb2=window._fb;
           const snap=await fb2.getDoc(fb2.doc(db,'users',user.uid));
@@ -400,8 +389,6 @@ if(isOwner){const el=document.getElementById('ownerDropItem');if(el)el.style.dis
       currentUser=null;isOwner=false;
       document.getElementById('loadingScreen').classList.add('hidden');
       document.getElementById('authOverlay').classList.remove('hidden');
-      document.getElementById('userPanel').style.display='none';
-      const odd=document.getElementById('ownerDropItem');if(odd)odd.style.display='none';
       if(firestoreUnsub){firestoreUnsub();firestoreUnsub=null;}
     }
   });
@@ -1593,15 +1580,11 @@ document.getElementById('profilePanel').addEventListener('click',function(e){
 
 function updateProfileAvatar(){
   const big=document.getElementById('profileAvatarBig');
-  const small=document.getElementById('userAvatar');
   const pp=localStorage.getItem('ms_pp_'+currentUser?.uid);
   if(pp){
     big.innerHTML=`<img src="${pp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    small.innerHTML=`<img src="${pp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
   }else{
-    const letter=(currentUser?.displayName||currentUser?.email||'?')[0].toUpperCase();
-    big.textContent=letter;
-    small.textContent=letter;
+    big.textContent=(currentUser?.displayName||currentUser?.email||'?')[0].toUpperCase();
   }
 }
 
@@ -1633,8 +1616,7 @@ async function saveUsername(){
   try{
     await window._fb.updateProfile(currentUser,{displayName:name});
     await cloudSaveData(currentUser.uid,{displayName:name});
-    document.getElementById('userName').textContent=name;
-    document.getElementById('userAvatar').textContent=name[0].toUpperCase();
+    
     updateProfileAvatar();
     profileMsg('success','✅ Pseudo mis à jour !');
   }catch(e){profileMsg('error','Erreur : '+e.message);}
@@ -1682,31 +1664,7 @@ function profileMsg(type,msg){
   else{suc.textContent=msg;suc.style.display='block';}
   setTimeout(()=>{err.style.display='none';suc.style.display='none';},3500);
 }
-function toggleProfileDropdown() {
-  const dd = document.getElementById('profileDropdown');
-  if (dd.style.display === 'block') { closeProfileDropdown(); return; }
-  if (currentUser) {
-    const pp = localStorage.getItem('ms_pp_' + currentUser.uid);
-    const dropAv = document.getElementById('dropAvatar');
-    const letter = (currentUser.displayName || currentUser.email || '?')[0].toUpperCase();
-    if (pp) dropAv.innerHTML = `<img src="${pp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    else dropAv.textContent = letter;
-    document.getElementById('dropName').textContent = currentUser.displayName || currentUser.email || '';
-    document.getElementById('dropEmail').textContent = currentUser.email || '';
-  }
-  dd.style.display = 'block';
-  setTimeout(() => document.addEventListener('click', outsideDropdownClick), 10);
-}
 
-function closeProfileDropdown() {
-  document.getElementById('profileDropdown').style.display = 'none';
-  document.removeEventListener('click', outsideDropdownClick);
-}
-
-function outsideDropdownClick(e) {
-  const panel = document.getElementById('userPanel');
-  if (!panel.contains(e.target)) closeProfileDropdown();
-}
 function updateSidebarProfile() {
   if (!currentUser) {
     document.getElementById('sidebarProfileCard').style.display = 'none';
