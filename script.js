@@ -305,7 +305,7 @@ function listenUser(uid){
         el.style.cssText=`background:${g.bg};border:1px solid ${g.border};color:${g.color}`;
         if(isOwner)el.classList.add('show');
       }
-      render();renderPopularGrid();
+      render();renderPopularGrid();updateSidebarProfile();
     }
   });
 }
@@ -399,7 +399,7 @@ window._initApp = function(){
           if(!snap.exists()||snap.data().grade!=='owner')await fb2.setDoc(fb2.doc(db,'users',user.uid),{grade:'owner',email:user.email,displayName:user.displayName||'Owner'},{merge:true});
         }catch(e){}
       }
-      listenUser(user.uid);loadState();startApp();
+      listenUser(user.uid);loadState();startApp();updateSidebarProfile();
     }else{
       currentUser=null;isOwner=false;
       document.getElementById('loadingScreen').classList.add('hidden');
@@ -1710,4 +1710,32 @@ function closeProfileDropdown() {
 function outsideDropdownClick(e) {
   const panel = document.getElementById('userPanel');
   if (!panel.contains(e.target)) closeProfileDropdown();
+}
+function updateSidebarProfile() {
+  if (!currentUser) {
+    document.getElementById('sidebarProfileCard').style.display = 'none';
+    return;
+  }
+  const card = document.getElementById('sidebarProfileCard');
+  card.style.display = 'block';
+  // Avatar
+  const pp = localStorage.getItem('ms_pp_' + currentUser.uid);
+  const av = document.getElementById('sideProfileAv');
+  const letter = (currentUser.displayName || currentUser.email || '?')[0].toUpperCase();
+  if (pp) av.innerHTML = `<img src="${pp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  else av.textContent = letter;
+  // Nom
+  document.getElementById('sideProfileName').textContent = currentUser.displayName || currentUser.email || '';
+  // Grade
+  const db = window._db, fb = window._fb;
+  if (db && fb) {
+    fb.getDoc(fb.doc(db, 'users', currentUser.uid)).then(snap => {
+      if (snap.exists()) {
+        const g = getGrade(snap.data().grade || 'member');
+        const el = document.getElementById('sideProfileGrade');
+        el.textContent = g.label;
+        el.style.cssText = `color:${g.color};font-family:'Barlow Condensed',sans-serif;font-weight:700`;
+      }
+    });
+  }
 }
