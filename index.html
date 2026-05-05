@@ -184,33 +184,7 @@
     </div>
 
     <div class="header-right">
-      <!-- Groupe utilisateur -->
-     <div id="userPanel" style="display:none;position:relative">
-  <div style="display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;background:rgba(100,100,100,.08);border:1px solid var(--border2);cursor:pointer" onclick="toggleProfileDropdown()">
-  <div id="userAvatar" class="user-avatar" style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:800;color:#fff;flex-shrink:0;text-transform:uppercase;background:linear-gradient(135deg,#444,#888)"></div>
-  <span id="userName" class="user-name" style="font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;color:var(--text);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-</div>
-
-  <div id="profileDropdown" style="display:none;position:absolute;top:calc(100% + 6px);right:0;width:220px;background:var(--card);border:1px solid var(--border2);border-radius:10px;box-shadow:var(--shadow);z-index:500;overflow:hidden">
-    <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px">
-      <div id="dropAvatar" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#f59e0b);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden"></div>
-      <div style="flex:1;min-width:0">
-        <div id="dropName" style="font-family:'Barlow Condensed',sans-serif;font-size:.88rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-        <div id="dropEmail" style="font-size:.62rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-      </div>
-    </div>
-    <div style="padding:5px">
-      <button onclick="openProfilePanel();closeProfileDropdown()" style="width:100%;padding:8px 10px;border-radius:6px;background:none;border:none;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px" onmouseenter="this.style.background='var(--card2)'" onmouseleave="this.style.background='none'">👤 Mon profil</button>
-      <button onclick="openSettings();closeProfileDropdown()" style="width:100%;padding:8px 10px;border-radius:6px;background:none;border:none;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px" onmouseenter="this.style.background='var(--card2)'" onmouseleave="this.style.background='none'">⚙️ Paramètres</button>
-      <div id="ownerDropItem" style="display:none">
-        <button onclick="openOwnerPanel();closeProfileDropdown()" style="width:100%;padding:8px 10px;border-radius:6px;background:none;border:none;color:#f59e0b;font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px" onmouseenter="this.style.background='rgba(245,158,11,.1)'" onmouseleave="this.style.background='none'">👑 Panneau Fondateur</button>
-      </div>
-      <div style="height:1px;background:var(--border);margin:4px 0"></div>
-      <button onclick="doLogout();closeProfileDropdown()" style="width:100%;padding:8px 10px;border-radius:6px;background:none;border:none;color:var(--live);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px" onmouseenter="this.style.background='rgba(239,68,68,.08)'" onmouseleave="this.style.background='none'">🚪 Déconnexion</button>
-    </div>
-  </div>
-</div>
-
+  
       <!-- Groupe navigation -->
       <div class="header-group">
         <div class="nav-tabs">
@@ -687,10 +661,7 @@
 <script>emailjs.init('xt8LSGWCFtJ28bKyM');</script>
 <script src="script.js"></script>
 
-    </div>
-  </div>
-</div>
-</div>
+
 <!-- PROFILE PANEL -->
 <div id="profilePanel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;align-items:center;justify-content:center;backdrop-filter:blur(10px)">
   <div style="background:var(--card);border:1px solid var(--border2);border-radius:16px;width:480px;max-width:96vw;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 0 60px rgba(124,58,237,.12)">
