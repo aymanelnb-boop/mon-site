@@ -293,12 +293,10 @@ function listenUser(uid){
   firestoreUnsub=fb.onSnapshot(fb.doc(db,'users',uid),(snap)=>{
     if(snap.exists()){
       const data=snap.data();
-      if(data.streamers && data.streamers.length > 0) streamers=[...data.streamers];
+      if(data.streamers && data.streamers.length>0)streamers=[...data.streamers];
       if(data.avatars)avatarCache={...data.avatars};
-      if(data.categories)categories=[...data.categories];
-     if(data.grade){
-  // grade géré dans updateSidebarProfile
-}
+      if(data.categories && data.categories.length>0)categories=[...data.categories];
+      if(data.grade){}
       render();renderPopularGrid();updateSidebarProfile();
     }
   });
