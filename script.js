@@ -1640,10 +1640,9 @@ async function savePassword(){
   if(newPw!==confirmPw){profileMsg('error','Les mots de passe ne correspondent pas !');return;}
   if(newPw.length<6){profileMsg('error','Minimum 6 caractères !');return;}
   try{
-    const {EmailAuthProvider,reauthenticateWithCredential,updatePassword}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-    const cred=EmailAuthProvider.credential(currentUser.email,oldPw);
-    await reauthenticateWithCredential(currentUser,cred);
-    await updatePassword(currentUser,newPw);
+    const cred=firebase.auth.EmailAuthProvider.credential(currentUser.email,oldPw);
+    await currentUser.reauthenticateWithCredential(cred);
+    await currentUser.updatePassword(newPw);
     document.getElementById('profilePwOld').value='';
     document.getElementById('profilePwNew').value='';
     document.getElementById('profilePwConfirm').value='';
