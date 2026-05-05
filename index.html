@@ -5,16 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Multi-Stream</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-
-  <!-- TON FICHIER CSS -->
   <link rel="stylesheet" href="style.css"/>
 
-  <!-- FIREBASE — CE BLOC RESTE ICI, NE PAS TOUCHER -->
+  <!-- FIREBASE -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
     import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
     const firebaseConfig = {
       apiKey: "AIzaSyCwwxy-L2jk-VchUruIk_kWn6MrY3tHkmY",
       authDomain: "multistream-a61ab.firebaseapp.com",
@@ -24,34 +21,34 @@
       appId: "1:28286068307:web:f7847370787f1e067488a6",
       measurementId: "G-YM113JHDX3"
     };
-
     const app = initializeApp(firebaseConfig);
     window._auth = getAuth(app);
     window._db   = getFirestore(app);
     window._fb   = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, sendPasswordResetEmail, doc, setDoc, getDoc, onSnapshot, collection, getDocs };
-
     document.addEventListener('DOMContentLoaded', () => {
       if (window._initApp) window._initApp();
       else window._firebaseReady = true;
     });
   </script>
-<!-- FLASHBACK PANEL -->
-<button class="flashback-toggle" id="flashbackToggle" onclick="toggleFlashbackPanel()">
-  🎬 FLASHBACK
-</button>
 
-<div class="flashback-panel" id="flashbackPanel">
-  <div class="flashback-panel-header">
-    <span class="live-dot"></span>
-    <span class="flashback-panel-title">FLASHBACK</span>
-    <span class="flashback-count" id="flashbackCount">0</span>
-    <button class="flashback-refresh" onclick="fetchFlashbackStreams()" title="Actualiser">↻</button>
+  <!-- FLASHBACK PANEL -->
+  <button class="flashback-toggle" id="flashbackToggle" onclick="toggleFlashbackPanel()">🎬 FLASHBACK</button>
+  <div class="flashback-panel" id="flashbackPanel">
+    <div class="flashback-panel-header">
+      <span class="live-dot"></span>
+      <span class="flashback-panel-title">FLASHBACK</span>
+      <span class="flashback-count" id="flashbackCount">0</span>
+      <button class="flashback-refresh" onclick="fetchFlashbackStreams()" title="Actualiser">↻</button>
+    </div>
+    <div class="flashback-list" id="flashbackList">
+      <div class="flashback-empty">Chargement…</div>
+    </div>
   </div>
-  <div class="flashback-list" id="flashbackList">
-    <div class="flashback-empty">Chargement…</div>
-  </div>
-</div>
 </head>
+<body>
+
+<!-- Focus exit hint -->
+<div class="focus-exit-hint">F2 · Quitter le mode Focus</div>
 
 <!-- LOADING -->
 <div class="loading-screen" id="loadingScreen">
@@ -66,7 +63,12 @@
     <div class="auth-header">
       <svg width="44" height="44" viewBox="0 0 48 48" fill="none" style="flex-shrink:0">
         <defs><linearGradient id="auth-lg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#a855f7"/><stop offset="60%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs>
-        <rect x="3" y="7" width="42" height="28" rx="5" fill="url(#auth-lg)" opacity=".15"/><rect x="3" y="7" width="42" height="28" rx="5" stroke="url(#auth-lg)" stroke-width="2"/><polygon points="14,16 14,26 22,21" fill="url(#auth-lg)"/><polygon points="26,16 26,26 34,21" fill="#f59e0b" opacity=".8"/><rect x="19" y="35" width="10" height="4" rx="1.5" fill="url(#auth-lg)" opacity=".7"/><rect x="14" y="39" width="20" height="2" rx="1" fill="url(#auth-lg)" opacity=".5"/>
+        <rect x="3" y="7" width="42" height="28" rx="5" fill="url(#auth-lg)" opacity=".15"/>
+        <rect x="3" y="7" width="42" height="28" rx="5" stroke="url(#auth-lg)" stroke-width="2"/>
+        <polygon points="14,16 14,26 22,21" fill="url(#auth-lg)"/>
+        <polygon points="26,16 26,26 34,21" fill="#f59e0b" opacity=".8"/>
+        <rect x="19" y="35" width="10" height="4" rx="1.5" fill="url(#auth-lg)" opacity=".7"/>
+        <rect x="14" y="39" width="20" height="2" rx="1" fill="url(#auth-lg)" opacity=".5"/>
       </svg>
       <div class="auth-logo-text">Multi-Stream</div>
       <div class="auth-subtitle">Regarde plusieurs streams en même temps</div>
@@ -134,31 +136,30 @@
     <button class="grade-panel-close" onclick="toggleGradePanel()">✕</button>
   </div>
   <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0">
-  <button onclick="document.getElementById('gradeTab1').style.display='flex';document.getElementById('gradeTab2').style.display='none';renderGradeHistory()" 
-    style="flex:1;padding:8px;background:none;border:none;color:var(--accent2);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;border-bottom:2px solid var(--accent)">
-    👥 Membres
-  </button>
-  <button onclick="document.getElementById('gradeTab1').style.display='none';document.getElementById('gradeTab2').style.display='flex';renderGradeHistory()"
-    style="flex:1;padding:8px;background:none;border:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer">
-    📋 Historique
-  </button>
-</div>
-<div class="grade-panel-body" id="gradeTab1">
-  <div class="grade-loading" id="gradePanelBody">Chargement…</div>
-</div>
-<div id="gradeTab2" style="display:none;flex-direction:column;max-height:380px;overflow-y:auto">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;flex-shrink:0">
-    <span style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase">Dernières modifications</span>
-    <button onclick="lsSet('ms_grade_history',[]);renderGradeHistory()" 
-      style="background:none;border:none;color:var(--live);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;cursor:pointer;font-weight:700">Effacer</button>
+    <button onclick="document.getElementById('gradeTab1').style.display='flex';document.getElementById('gradeTab2').style.display='none';renderGradeHistory()"
+      style="flex:1;padding:8px;background:none;border:none;color:var(--accent2);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;border-bottom:2px solid var(--accent)">
+      👥 Membres
+    </button>
+    <button onclick="document.getElementById('gradeTab1').style.display='none';document.getElementById('gradeTab2').style.display='flex';renderGradeHistory()"
+      style="flex:1;padding:8px;background:none;border:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer">
+      📋 Historique
+    </button>
   </div>
-  <div id="gradeHistoryList"></div>
-</div>
+  <div class="grade-panel-body" id="gradeTab1">
+    <div class="grade-loading" id="gradePanelBody">Chargement…</div>
+  </div>
+  <div id="gradeTab2" style="display:none;flex-direction:column;max-height:380px;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;flex-shrink:0">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase">Dernières modifications</span>
+      <button onclick="lsSet('ms_grade_history',[]);renderGradeHistory()" style="background:none;border:none;color:var(--live);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;cursor:pointer;font-weight:700">Effacer</button>
+    </div>
+    <div id="gradeHistoryList"></div>
+  </div>
 </div>
 
 <!-- HEADER -->
 <div class="header-wrapper" id="headerWrapper">
-<button onclick="toggleTopBar()" id="topBarToggleBtn" style="position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:200;background:var(--card);border:1px solid var(--border2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;padding:2px 14px;border-radius:0 0 8px 8px;cursor:pointer;letter-spacing:1px;transition:all .14s">▲ Masquer</button>
+  <button onclick="toggleTopBar()" id="topBarToggleBtn" style="position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:200;background:var(--card);border:1px solid var(--border2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;padding:2px 14px;border-radius:0 0 8px 8px;cursor:pointer;letter-spacing:1px;transition:all .14s">▲ Masquer</button>
   <header id="mainHeader">
     <button class="btn" id="mobileMenuBtn" onclick="openMobileSidebar()" style="padding:5px 9px;flex-shrink:0">☰</button>
     <div class="logo-wrap" onclick="openLogoLiveModal()">
@@ -181,7 +182,9 @@
         <span class="logo-sub">Twitch Player</span>
       </div>
     </div>
+
     <div class="header-right">
+      <!-- Groupe utilisateur -->
       <div class="user-panel" id="userPanel" style="display:none">
         <div class="user-avatar" id="userAvatar">?</div>
         <span class="user-name" id="userName"></span>
@@ -189,33 +192,53 @@
         <div class="user-sync" id="userSync" title="Synchronisé"></div>
         <button class="btn-logout" onclick="doLogout()">Déco</button>
       </div>
+
+      <!-- Groupe navigation -->
+      <div class="header-group">
+        <div class="nav-tabs">
+          <button class="nav-tab active" id="navLive" onclick="showPage('live')">▶ Live</button>
+          <button class="nav-tab" id="navRediff" onclick="showPage('rediff')">📼 Rediff</button>
+        </div>
+      </div>
+
+      <!-- Groupe infos live -->
+      <div class="header-group" style="gap:6px">
+        <div class="refresh-indicator" id="refreshIndicator">
+          <div class="refresh-dot" id="refreshDot"></div>
+          <span id="refreshLabel">Live</span>
+          <span class="refresh-cd" id="refreshCd">60s</span>
+        </div>
+        <span id="limitTag" class="limit-tag limit-ok">0/10</span>
+      </div>
+
+      <!-- Groupe actions secondaires -->
+      <div class="header-group">
+        <button class="btn" title="Catégories" onclick="openCatModal()" style="padding:5px 8px;border:none;background:none;color:var(--muted2)">🏷️</button>
+        <button class="btn" id="btnChat" onclick="toggleChat()" style="padding:5px 8px;border:none;background:none;color:var(--muted2)">💬</button>
+        <button class="btn" onclick="openSettings()" title="Paramètres" style="padding:5px 8px;border:none;background:none;color:var(--muted2)">⚙️</button>
+        <button class="btn" onclick="toggleFocusMode()" title="Mode Focus (F2)" style="padding:5px 8px;border:none;background:none;color:var(--muted2)">🎯</button>
+      </div>
+
+      <!-- Grade owner -->
       <button class="owner-grade-btn" id="ownerGradeBtn" onclick="toggleGradePanel()" title="Panneau Grades">⭐</button>
-      <button class="btn" onclick="openSettings()" title="Paramètres" style="padding:5px 12px;background:rgba(124,58,237,.15);border-color:var(--accent);color:var(--accent2)">⚙️ Param</button>
-      <div class="nav-tabs">
-        <button class="nav-tab active" id="navLive" onclick="showPage('live')">▶ Live</button>
-<button class="nav-tab" id="navRediff" onclick="showPage('rediff')">📼 Rediff</button>
+
+      <!-- Groupe actions principales -->
+      <div class="header-group" style="gap:5px">
+        <button class="btn" onclick="shareSession()" title="Partager la session" style="background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.35);color:#818cf8;padding:5px 10px">🔗 Partager</button>
+        <button class="btn danger" onclick="clearAll()" style="padding:5px 10px">🗑 Vider</button>
+        <button class="btn primary" id="btnLaunch" onclick="launchStreams()" disabled>▶ Lancer</button>
       </div>
-      <div class="refresh-indicator" id="refreshIndicator">
-        <div class="refresh-dot" id="refreshDot"></div>
-        <span id="refreshLabel">Live</span>
-        <span class="refresh-cd" id="refreshCd">60s</span>
+
+      <div class="kbd-hint" style="flex-shrink:0;gap:4px;display:flex">
+        <span class="kbd">F</span>FS <span class="kbd">G</span>multi <span class="kbd">C</span>chat <span class="kbd">F2</span>focus
       </div>
-      <span id="limitTag" class="limit-tag limit-ok">0/10</span>
-     
-      <button class="btn" title="Catégories" onclick="openCatModal()">🏷️</button>
-      <button class="btn danger" onclick="clearAll()" 
-  style="font-size:1.1rem;padding:7px 14px;font-weight:700;letter-spacing:1px">
-  🗑 Vider
-</button>
-     
-      <button class="btn" id="btnChat" onclick="toggleChat()">💬</button>
-      <button class="btn primary" id="btnLaunch" onclick="launchStreams()" disabled>▶ Lancer</button>
     </div>
   </header>
 </div>
 
 <!-- APP CONTAINER -->
 <div class="app-container">
+
   <!-- PAGE LIVE -->
   <div class="page active" id="pageLive">
     <div class="app">
@@ -254,9 +277,9 @@
         <div class="sb-list" id="sbList"></div>
         <div style="flex-shrink:0;border-top:1px solid var(--border)">
           <div style="padding:5px 9px 3px;font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;justify-content:space-between">
-  <span>Historique</span>
-  <button onclick="clearHistory()" style="background:none;border:none;color:var(--live);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;cursor:pointer;padding:1px 5px;border-radius:4px;transition:all .14s" title="Effacer l'historique">🗑 Effacer</button>
-</div>
+            <span>Historique</span>
+            <button onclick="clearHistory()" style="background:none;border:none;color:var(--live);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;cursor:pointer;padding:1px 5px;border-radius:4px;transition:all .14s">🗑 Effacer</button>
+          </div>
           <div id="historyList"></div>
         </div>
       </div>
@@ -288,11 +311,11 @@
 
         <!-- MOBILE CONTROLS -->
         <div class="mobile-stream-controls hidden" id="mobileStreamControls">
-  <button class="btn" onclick="toggleAllStreams()">⏸</button>
-  <button class="btn" onclick="toggleMuteAll()">🔊</button>
-  <button class="btn" onclick="openStreamsFsOverlay()">⛶</button>
-  <button class="btn danger" onclick="clearAll()">🗑</button>
-</div>
+          <button class="btn" onclick="toggleAllStreams()">⏸</button>
+          <button class="btn" onclick="toggleMuteAll()">🔊</button>
+          <button class="btn" onclick="openStreamsFsOverlay()">⛶</button>
+          <button class="btn danger" onclick="clearAll()">🗑</button>
+        </div>
         <div class="mobile-streams-nav" id="mobileStreamsNav"></div>
 
         <!-- LIVE PANEL -->
@@ -337,6 +360,7 @@
             <div class="step"><div class="step-num">1</div><div>Recherche un streameur ou clique sur un populaire</div></div>
             <div class="step"><div class="step-num">2</div><div>Sélectionne-le dans la liste puis <b>Lancer</b></div></div>
             <div class="step"><div class="step-num">3</div><div>Crée des <b>🏷️ Catégories</b> pour organiser tes streameurs</div></div>
+            <div class="step"><div class="step-num">4</div><div>Utilise <b>F2</b> pour le <b>mode Focus</b> — streams plein écran sans UI</div></div>
           </div>
 
           <!-- FOOTER -->
@@ -416,7 +440,8 @@
 
     </div>
   </div>
-<!-- PAGE REDIFF -->
+
+  <!-- PAGE REDIFF -->
   <div class="page" id="pageRediff">
     <div class="app">
       <div class="sidebar" style="min-width:200px;width:220px">
@@ -434,9 +459,8 @@
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:4px;color:var(--text)">MULTI-REDIFF</div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:.88rem;text-align:center;max-width:360px;line-height:1.6">Clique sur un streameur à gauche, sélectionne une VOD, et lance ton multi-POV !</div>
         </div>
-        <div id="rediffArea" style="flex:1;display:none;position:relative">
-          <div id="rediffLayout" style="width:100%;height:100%"></div>
-        </div>
+        <div id="rediffArea" style="flex:1;display:none;position:relative"></div>
+        <div id="rediffLayout" style="display:none"></div>
       </div>
       <div id="vodPanel" style="display:none;flex-direction:column;width:340px;flex-shrink:0;border-left:1px solid var(--border);background:var(--card2)">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);flex-shrink:0">
@@ -447,14 +471,15 @@
       </div>
     </div>
   </div>
+
 </div><!-- fin app-container -->
 
 <!-- LOGO LIVE MODAL -->
-<div id="logoLiveModal">
+<div id="logoLiveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:900;backdrop-filter:blur(12px);flex-direction:column">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:rgba(13,13,26,.98);border-bottom:1px solid var(--border);flex-shrink:0">
     <div style="display:flex;align-items:center;gap:10px">
       <span style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:4px;background:linear-gradient(135deg,#a855f7,#7c3aed,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Streams en Live</span>
-      <span id="logoLiveCount" style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:2px;color:var(--online);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.28);padding:2px 9px;border-radius:9px">0 en live</span>
+      <span id="logoLiveCount" style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:2px;color:var(--accent2);background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.28);padding:2px 9px;border-radius:9px">0 en live</span>
     </div>
     <button onclick="closeLogoLiveModal()" style="padding:5px 14px;border-radius:6px;border:1px solid var(--border2);background:var(--card);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer">✕ Fermer</button>
   </div>
@@ -510,7 +535,16 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
-<div class="new-live-toast" id="newLiveToast"><div class="new-live-toast-dot"></div><span id="newLiveToastMsg"></span></div>
+
+<!-- Notification live enrichie -->
+<div class="new-live-toast" id="newLiveToast">
+  <div class="new-live-toast-dot"></div>
+  <div class="new-live-toast-info">
+    <div class="new-live-toast-name" id="newLiveToastMsg"></div>
+    <div class="new-live-toast-sub" id="newLiveToastSub"></div>
+  </div>
+  <button class="new-live-toast-btn" id="newLiveToastBtn">Voir</button>
+</div>
 
 <!-- MOBILE NAV -->
 <nav class="mobile-nav">
@@ -578,6 +612,8 @@
           <div class="kbd-row"><span class="kbd-key">M</span><span class="kbd-desc">Mute / Unmute tous</span></div>
           <div class="kbd-row"><span class="kbd-key">Enter</span><span class="kbd-desc">Lancer les streams</span></div>
           <div class="kbd-row"><span class="kbd-key">ESC</span><span class="kbd-desc">Fermer plein écran</span></div>
+          <div class="kbd-row"><span class="kbd-key">F2</span><span class="kbd-desc">Mode Focus (UI masquée)</span></div>
+          <div class="kbd-row"><span class="kbd-key">← →</span><span class="kbd-desc">Changer stream principal</span></div>
         </div>
       </div>
     </div>
@@ -618,8 +654,6 @@
 <script src="https://player.twitch.tv/js/embed/v1.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script>emailjs.init('xt8LSGWCFtJ28bKyM');</script>
-
-<!-- TON FICHIER JS -->
 <script src="script.js"></script>
 
 </body>
