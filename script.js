@@ -1686,3 +1686,28 @@ function profileMsg(type,msg){
   else{suc.textContent=msg;suc.style.display='block';}
   setTimeout(()=>{err.style.display='none';suc.style.display='none';},3500);
 }
+function toggleProfileDropdown() {
+  const dd = document.getElementById('profileDropdown');
+  if (dd.style.display === 'block') { closeProfileDropdown(); return; }
+  if (currentUser) {
+    const pp = localStorage.getItem('ms_pp_' + currentUser.uid);
+    const dropAv = document.getElementById('dropAvatar');
+    const letter = (currentUser.displayName || currentUser.email || '?')[0].toUpperCase();
+    if (pp) dropAv.innerHTML = `<img src="${pp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    else dropAv.textContent = letter;
+    document.getElementById('dropName').textContent = currentUser.displayName || currentUser.email || '';
+    document.getElementById('dropEmail').textContent = currentUser.email || '';
+  }
+  dd.style.display = 'block';
+  setTimeout(() => document.addEventListener('click', outsideDropdownClick), 10);
+}
+
+function closeProfileDropdown() {
+  document.getElementById('profileDropdown').style.display = 'none';
+  document.removeEventListener('click', outsideDropdownClick);
+}
+
+function outsideDropdownClick(e) {
+  const panel = document.getElementById('userPanel');
+  if (!panel.contains(e.target)) closeProfileDropdown();
+}
