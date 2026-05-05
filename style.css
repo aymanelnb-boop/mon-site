@@ -548,7 +548,7 @@ body.focus-mode .focus-exit-hint { display:block; }
 .grade-panel{display:none;position:fixed;bottom:70px;right:18px;width:310px;background:var(--card);border:1px solid var(--accent);border-radius:13px;overflow:hidden;box-shadow:0 0 40px var(--accent-glow),0 20px 40px rgba(0,0,0,.4);z-index:800;flex-direction:column}
 .grade-panel.open{display:flex}
 .grade-panel-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(168,85,247,.08));border-bottom:1px solid var(--border)}
-.grade-panel-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;background:linear-gradient(135deg,#a855f7,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.grade-panel-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;background:linear-gradient(135deg,#a855f7,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-clip:text}
 .grade-panel-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.88rem;padding:2px 5px;border-radius:4px;transition:color .14s}
 .grade-panel-close:hover{color:var(--live)}
 .grade-panel-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:380px}
