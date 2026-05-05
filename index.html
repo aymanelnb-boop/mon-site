@@ -30,22 +30,22 @@
       else window._firebaseReady = true;
     });
   </script>
-
-  <!-- FLASHBACK PANEL -->
-  <button class="flashback-toggle" id="flashbackToggle" onclick="toggleFlashbackPanel()">🎬 FLASHBACK</button>
-  <div class="flashback-panel" id="flashbackPanel">
-    <div class="flashback-panel-header">
-      <span class="live-dot"></span>
-      <span class="flashback-panel-title">FLASHBACK</span>
-      <span class="flashback-count" id="flashbackCount">0</span>
-      <button class="flashback-refresh" onclick="fetchFlashbackStreams()" title="Actualiser">↻</button>
-    </div>
-    <div class="flashback-list" id="flashbackList">
-      <div class="flashback-empty">Chargement…</div>
-    </div>
-  </div>
 </head>
 <body>
+
+<!-- FLASHBACK PANEL -->
+<button class="flashback-toggle" id="flashbackToggle" onclick="toggleFlashbackPanel()">🎬 FLASHBACK</button>
+<div class="flashback-panel" id="flashbackPanel">
+  <div class="flashback-panel-header">
+    <span class="live-dot"></span>
+    <span class="flashback-panel-title">FLASHBACK</span>
+    <span class="flashback-count" id="flashbackCount">0</span>
+    <button class="flashback-refresh" onclick="fetchFlashbackStreams()" title="Actualiser">↻</button>
+  </div>
+  <div class="flashback-list" id="flashbackList">
+    <div class="flashback-empty">Chargement…</div>
+  </div>
+</div>
 
 <!-- Focus exit hint -->
 <div class="focus-exit-hint">F2 · Quitter le mode Focus</div>
@@ -186,7 +186,7 @@
     <div class="header-right">
       <!-- Groupe utilisateur -->
       <div class="user-panel" id="userPanel" style="display:none">
-        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-avatar" id="userAvatar" onclick="openProfilePanel()" style="cursor:pointer">?</div>
         <span class="user-name" id="userName"></span>
         <span class="grade-badge-header" id="gradeBadgeHeader"></span>
         <div class="user-sync" id="userSync" title="Synchronisé"></div>
@@ -656,5 +656,86 @@
 <script>emailjs.init('xt8LSGWCFtJ28bKyM');</script>
 <script src="script.js"></script>
 
+<!-- PROFILE PANEL -->
+<div id="profilePanel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:4000;align-items:center;justify-content:center;backdrop-filter:blur(12px)">
+  <div style="background:var(--card);border:1px solid var(--accent);border-radius:18px;width:420px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 0 80px var(--accent-glow)">
+    
+    <!-- Header -->
+    <div style="padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(245,158,11,.06))">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:4px;background:linear-gradient(135deg,#a855f7,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Mon Profil</span>
+      <button onclick="closeProfilePanel()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px 8px;border-radius:6px;transition:color .14s">✕</button>
+    </div>
+
+    <!-- Photo de profil -->
+    <div style="padding:20px 22px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:12px">
+      <div style="position:relative">
+        <div id="profileAvatarBig" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#f59e0b);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:2rem;color:#fff;border:3px solid var(--accent);overflow:hidden;cursor:pointer" onclick="document.getElementById('ppInput').click()">?</div>
+        <div onclick="document.getElementById('ppInput').click()" style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;border:2px solid var(--card)">📷</div>
+      </div>
+      <input type="file" id="ppInput" accept="image/*" style="display:none" onchange="handlePPUpload(event)"/>
+      <div style="display:flex;flex-direction:column;gap:4px;width:100%">
+        <label style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Ou colle une URL d'image</label>
+        <div style="display:flex;gap:6px">
+          <input id="ppUrlInput" placeholder="https://..." style="flex:1;padding:8px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:.82rem;outline:none"/>
+          <button onclick="applyPPUrl()" style="padding:8px 14px;border-radius:7px;background:rgba(124,58,237,.18);border:1px solid var(--accent);color:var(--accent2);font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">OK</button>
+        </div>
+      </div>
+      <!-- Grade badge -->
+      <div id="profileGradeBadge" style="padding:3px 12px;border-radius:9px;font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:800;letter-spacing:1px"></div>
+    </div>
+
+    <!-- Champs -->
+    <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px">
+
+      <!-- Pseudo -->
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Pseudo</label>
+        <div style="display:flex;gap:6px">
+          <input id="profileUsername" placeholder="Ton pseudo" style="flex:1;padding:9px 11px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:.88rem;outline:none"/>
+          <button onclick="saveUsername()" style="padding:9px 14px;border-radius:8px;background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">Sauver</button>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Adresse Email</label>
+        <div style="display:flex;gap:6px">
+          <input id="profileEmail" type="email" placeholder="ton@email.com" style="flex:1;padding:9px 11px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:.88rem;outline:none"/>
+          <button onclick="saveEmail()" style="padding:9px 14px;border-radius:8px;background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">Sauver</button>
+        </div>
+      </div>
+
+      <!-- Mot de passe -->
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Nouveau mot de passe</label>
+        <input id="profilePwOld" type="password" placeholder="Mot de passe actuel" style="padding:9px 11px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:.88rem;outline:none;margin-bottom:5px"/>
+        <input id="profilePwNew" type="password" placeholder="Nouveau mot de passe" style="padding:9px 11px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:.88rem;outline:none;margin-bottom:5px"/>
+        <input id="profilePwConfirm" type="password" placeholder="Confirmer le nouveau mot de passe" style="padding:9px 11px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:.88rem;outline:none"/>
+        <button onclick="savePassword()" style="padding:10px;border-radius:8px;background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;margin-top:4px">Changer le mot de passe</button>
+      </div>
+
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;background:var(--card2);border:1px solid var(--border);border-radius:10px">
+        <div style="text-align:center">
+          <div id="profileStatStreamers" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--accent2)">0</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase">Streameurs</div>
+        </div>
+        <div style="text-align:center">
+          <div id="profileStatCats" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--accent2)">0</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase">Catégories</div>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div id="profileError" style="display:none;padding:9px 12px;border-radius:8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#fca5a5;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:600"></div>
+      <div id="profileSuccess" style="display:none;padding:9px 12px;border-radius:8px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#86efac;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:600"></div>
+
+      <!-- Déconnexion -->
+      <button onclick="doLogout();closeProfilePanel()" style="padding:11px;border-radius:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .14s" onmouseover="this.style.background='var(--live)';this.style.color='#fff'" onmouseout="this.style.background='rgba(239,68,68,.1)';this.style.color='#fca5a5'">🚪 Se déconnecter</button>
+
+    </div>
+  </div>
+</div>
+</div>
 </body>
 </html>
