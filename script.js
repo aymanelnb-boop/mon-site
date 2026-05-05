@@ -313,12 +313,7 @@ function listenUser(uid){
 // ══════════════════════════════════════════
 //  GRADE SYSTEM
 // ══════════════════════════════════════════
-function toggleGradePanel(){
-  const panel=document.getElementById('gradePanel');
-  const isOpen=panel.classList.contains('open');
-  if(isOpen)panel.classList.remove('open');
-  else{panel.classList.add('open');loadGradePanel();}
-}
+
 async function loadGradePanel(){
   const body=document.getElementById('gradePanelBody');
   body.innerHTML='<div class="grade-loading">Chargement…</div>';
@@ -386,6 +381,7 @@ window._initApp = function(){
     clearTimeout(timeout);
     if(user){
       currentUser=user;isOwner=(user.email===OWNER_EMAIL);
+if(isOwner){const el=document.getElementById('ownerDropItem');if(el)el.style.display='block';}
       document.getElementById('authOverlay').classList.add('hidden');
       document.getElementById('loadingScreen').classList.add('hidden');
       const up=document.getElementById('userPanel');if(up)up.style.display='flex';
@@ -1741,3 +1737,145 @@ function updateSidebarProfile() {
     });
   }
 }
+function openOwnerPanel(){
+  if(!isOwner){showToast('Accès refusé');return;}
+  document.getElementById('ownerPanel').style.display='flex';
+  switchOwnerTab('membres',document.querySelector('.owner-tab-btn'));
+}
+function closeOwnerPanel(){document.getElementById('ownerPanel').style.display='none';}
+
+function switchOwnerTab(tab,btn){
+  document.querySelectorAll('.owner-tab-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const body=document.getElementById('ownerPanelBody');
+  if(tab==='membres')renderOwnerMembres(body);
+  else if(tab==='annonces')renderOwnerAnnonces(body);
+  else if(tab==='outils')renderOwnerOutils(body);
+  else if(tab==='historique'){body.innerHTML='<div id="gradeHistoryList"></div>';renderGradeHistory();}
+}
+
+async function renderOwnerMembres(body){
+  body.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-family:\'Barlow Condensed\',sans-serif">Chargement…</div>';
+  const db=window._db,fb=window._fb;if(!db||!fb){body.innerHTML='<div style="color:var(--muted);padding:20px">Firebase indisponible</div>';return;}
+  try{
+    const snap=await fb.getDocs(fb.collection(db,'users'));
+    const users=[];snap.forEach(d=>{users.push({uid:d.id,...d.data()});});
+    const order=['owner','admin','mod','vip','premium','member'];
+    users.sort((a,b)=>(order.indexOf(a.grade||'member'))-(order.indexOf(b.grade||'member')));
+    const stats=document.createElement('div');
+    stats.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px';
+    stats.innerHTML=`
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--accent2)">${users.length}</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Membres</div>
+      </div>
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:#f59e0b">${users.filter(u=>['owner','admin'].includes(u.grade)).length}</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Staff</div>
+      </div>
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:#ec4899">${users.filter(u=>['vip','premium'].includes(u.grade)).length}</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">VIP+</div>
+      </div>`;
+    body.innerHTML='';body.appendChild(stats);
+    const label=document.createElement('div');
+    label.style.cssText='font-family:\'Barlow Condensed\',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:8px';
+    label.textContent='Gestion des grades';
+    body.appendChild(label);
+    users.forEach(u=>{
+      const g=getGrade(u.grade||'member');
+      const name=u.displayName||u.email||u.uid.slice(0,8);
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:9px;padding:9px 10px;background:var(--card2);border:1px solid var(--border);border-radius:9px;margin-bottom:6px';
+      row.innerHTML=`
+        <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,${g.color},${g.border});display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:800;color:#fff;flex-shrink:0;text-transform:uppercase">${name[0]}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(name)}</div>
+          <div style="font-size:.62rem;color:var(--muted)">${u.email||''}</div>
+        </div>
+        <span style="background:${g.bg};border:1px solid ${g.border};color:${g.color};padding:2px 8px;border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;white-space:nowrap;flex-shrink:0">${g.label}</span>
+        <select onchange="setUserGrade('${u.uid}',this.value)" style="padding:4px 7px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.78rem;outline:none;cursor:pointer;flex-shrink:0">
+          ${GRADES.map(gr=>`<option value="${gr.id}"${(u.grade||'member')===gr.id?' selected':''}>${gr.label}</option>`).join('')}
+        </select>`;
+      body.appendChild(row);
+    });
+  }catch(e){body.innerHTML='<div style="color:var(--live);padding:14px;font-family:\'Barlow Condensed\',sans-serif">Erreur : '+e.message+'</div>';}
+}
+
+function renderOwnerAnnonces(body){
+  body.innerHTML=`
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:10px">Bannière site</div>
+    <div style="display:flex;gap:7px;margin-bottom:14px">
+      <input id="ownerBannerInput" placeholder="Texte de la bannière (vide = masquer)" style="flex:1;padding:9px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.85rem;outline:none">
+      <button onclick="saveOwnerBanner()" style="padding:9px 14px;border-radius:7px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);color:#f59e0b;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">Publier</button>
+    </div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:10px">Message global</div>
+    <textarea id="ownerMsgInput" placeholder="Message visible par tous à la prochaine connexion…" style="width:100%;padding:9px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.85rem;resize:vertical;min-height:80px;outline:none;margin-bottom:8px"></textarea>
+    <button onclick="saveOwnerMsg()" style="padding:9px 16px;border-radius:7px;background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;width:100%">Envoyer à tous</button>`;
+  const saved=lsGet('ms_owner_banner','');
+  if(saved)document.getElementById('ownerBannerInput').value=saved;
+}
+
+function saveOwnerBanner(){
+  const v=document.getElementById('ownerBannerInput').value.trim();
+  lsSet('ms_owner_banner',v);renderBanner();
+  showToast(v?'📢 Bannière publiée !':'Bannière masquée');
+}
+function saveOwnerMsg(){
+  const v=document.getElementById('ownerMsgInput').value.trim();
+  if(!v){showToast('Message vide !');return;}
+  lsSet('ms_owner_msg',v);showToast('✅ Message sauvegardé !');
+}
+function renderBanner(){
+  let el=document.getElementById('ownerBanner');
+  const msg=lsGet('ms_owner_banner','');
+  if(!msg){if(el)el.remove();return;}
+  if(!el){
+    el=document.createElement('div');el.id='ownerBanner';
+    el.style.cssText='position:fixed;top:52px;left:0;right:0;z-index:150;padding:6px 16px;background:rgba(245,158,11,.18);border-bottom:1px solid rgba(245,158,11,.35);font-family:\'Barlow Condensed\',sans-serif;font-size:.82rem;font-weight:700;color:#f59e0b;text-align:center;display:flex;align-items:center;justify-content:center;gap:9px';
+    document.body.appendChild(el);
+  }
+  el.innerHTML=`<span>📢 ${escHtml(msg)}</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#f59e0b;cursor:pointer;font-size:.9rem;padding:0 2px">✕</button>`;
+}
+
+function renderOwnerOutils(body){
+  body.innerHTML=`
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:10px">Actions rapides</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px">
+      <button onclick="fetchLiveStatus();showToast('🔄 Refresh forcé !')" style="padding:10px;border-radius:8px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);color:var(--accent2);font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">🔄 Refresh live</button>
+      <button onclick="exportUsers()" style="padding:10px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">📥 Exporter users</button>
+      <button onclick="showToast('Streameurs: '+streamers.length+' | Cats: '+categories.length+' | Sél: '+selected.length)" style="padding:10px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">📊 Stats app</button>
+      <button onclick="if(confirm('Vider le cache ?')){localStorage.clear();showToast('Cache vidé !')}" style="padding:10px;border-radius:8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:#fca5a5;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">🗑 Vider cache</button>
+    </div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:10px">Maintenance</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+      <button onclick="toggleMaintenanceMode()" id="ownerMaintBtn" style="padding:10px;border-radius:8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:#fca5a5;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">🔧 Mode maintenance</button>
+      <button onclick="showOwnerLogs()" style="padding:10px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">📜 Logs</button>
+    </div>
+    <div id="ownerLogsArea" style="display:none;margin-top:12px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:10px;font-family:monospace;font-size:.72rem;color:var(--muted2);max-height:140px;overflow-y:auto"></div>`;
+}
+function exportUsers(){
+  const data=JSON.stringify({exported:new Date().toISOString(),streamers,categories},null,2);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download='multistream-export.json';a.click();showToast('📥 Export téléchargé !');
+}
+function toggleMaintenanceMode(){
+  const on=!lsGet('ms_maintenance',false);lsSet('ms_maintenance',on);
+  const btn=document.getElementById('ownerMaintBtn');
+  if(btn){btn.style.background=on?'rgba(239,68,68,.18)':'rgba(239,68,68,.08)';btn.textContent=on?'✅ Maintenance ON':'🔧 Mode maintenance';}
+  showToast(on?'🔧 Maintenance activée':'Désactivée');
+}
+function showOwnerLogs(){
+  const area=document.getElementById('ownerLogsArea');if(!area)return;
+  const visible=area.style.display!=='none';area.style.display=visible?'none':'block';
+  if(!visible){
+    const logs=[
+      `[${new Date().toLocaleTimeString()}] App chargée`,
+      `[${new Date().toLocaleTimeString()}] ${streamers.length} streameurs en liste`,
+      `[${new Date().toLocaleTimeString()}] Token Twitch : ${twitchToken?'OK':'manquant'}`,
+      `[${new Date().toLocaleTimeString()}] Connecté : ${currentUser?.email}`,
+      `[${new Date().toLocaleTimeString()}] Streams actifs : ${selected.length}`
+    ];
+    area.textContent=logs.join('\n');
+  }
+}
+setTimeout(renderBanner,2000);
