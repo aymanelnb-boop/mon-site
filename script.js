@@ -1776,6 +1776,8 @@ function renderOwnerAnnonces(body){
 
 function saveOwnerBanner(){
   const v=document.getElementById('ownerBannerInput').value.trim();
+  const db=window._db,fb=window._fb;
+  if(db&&fb){fb.setDoc(fb.doc(db,'config','banner'),{text:v},{merge:true});}
   lsSet('ms_owner_banner',v);renderBanner();
   showToast(v?'📢 Bannière publiée !':'Bannière masquée');
 }
@@ -1785,8 +1787,16 @@ function saveOwnerMsg(){
   lsSet('ms_owner_msg',v);showToast('✅ Message sauvegardé !');
 }
 function renderBanner(){
+  const db=window._db,fb=window._fb;
+  if(db&&fb){
+    fb.getDoc(fb.doc(db,'config','banner')).then(snap=>{
+      const msg=snap.exists()?snap.data().text||'':'';
+      _applyBanner(msg);
+    });
+  }else{_applyBanner(lsGet('ms_owner_banner',''));}
+}
+function _applyBanner(msg){
   let el=document.getElementById('ownerBanner');
-  const msg=lsGet('ms_owner_banner','');
   if(!msg){if(el)el.remove();return;}
   if(!el){
     el=document.createElement('div');el.id='ownerBanner';
