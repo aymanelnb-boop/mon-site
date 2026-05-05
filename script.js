@@ -382,7 +382,7 @@ window._initApp = function(){
           if(!snap.exists()||snap.data().grade!=='owner')await fb2.setDoc(fb2.doc(db,'users',user.uid),{grade:'owner',email:user.email,displayName:user.displayName||'Owner'},{merge:true});
         }catch(e){}
       }
-      listenUser(user.uid);loadState();startApp();updateSidebarProfile();
+      listenUser(user.uid);startApp();updateSidebarProfile();
     }else{
       currentUser=null;isOwner=false;
       document.getElementById('loadingScreen').classList.add('hidden');
