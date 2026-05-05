@@ -270,7 +270,7 @@ async function doLogout(){
   await fb.signOut(auth);currentUser=null;streamers=[];selected=[];categories=[];isOwner=false;
   document.getElementById('authOverlay').classList.remove('hidden');
   document.getElementById('userPanel').style.display='none';
-  document.getElementById('ownerGradeBtn').classList.remove('show');
+  const odd=document.getElementById('ownerDropItem');if(odd)odd.style.display='none';
   document.getElementById('gradeBadgeHeader').classList.remove('show');
   showToast('👋 Déconnecté');
 }
@@ -388,7 +388,7 @@ if(isOwner){const el=document.getElementById('ownerDropItem');if(el)el.style.dis
       document.getElementById('userAvatar').textContent=(user.displayName||user.email||'?')[0].toUpperCase();
       document.getElementById('userName').textContent=user.displayName||user.email||'';
       if(isOwner){
-        document.getElementById('ownerGradeBtn').classList.add('show');
+        const odd=document.getElementById('ownerDropItem');if(odd)odd.style.display='block';
         try{
           const db=window._db,fb2=window._fb;
           const snap=await fb2.getDoc(fb2.doc(db,'users',user.uid));
@@ -401,7 +401,7 @@ if(isOwner){const el=document.getElementById('ownerDropItem');if(el)el.style.dis
       document.getElementById('loadingScreen').classList.add('hidden');
       document.getElementById('authOverlay').classList.remove('hidden');
       document.getElementById('userPanel').style.display='none';
-      document.getElementById('ownerGradeBtn').classList.remove('show');
+      const odd=document.getElementById('ownerDropItem');if(odd)odd.style.display='none';
       if(firestoreUnsub){firestoreUnsub();firestoreUnsub=null;}
     }
   });
@@ -1263,7 +1263,7 @@ document.addEventListener('keydown',e=>{
       if(document.getElementById('fsOverlay').classList.contains('open')){closeFullscreen();break;}
       if(document.getElementById('catModal').classList.contains('open')){closeCatModal();break;}
       if(document.getElementById('editModal').classList.contains('open')){closeEditModal();break;}
-      if(document.getElementById('gradePanel').classList.contains('open')){toggleGradePanel();break;}
+      if(document.getElementById('ownerPanel').style.display==='flex'){closeOwnerPanel();break;}
       break;
     case 'F2':toggleFocusMode();break;
     case 'f':case 'F':if(document.getElementById('fsOverlay').classList.contains('open'))closeFullscreen();else if(selected.length)openFullscreen(selected[0]);break;
