@@ -185,13 +185,30 @@
 
     <div class="header-right">
       <!-- Groupe utilisateur -->
-      <div class="user-panel" id="userPanel" style="display:none">
-        <div class="user-avatar" id="userAvatar" onclick="openProfilePanel()" style="cursor:pointer">?</div>
-        <span class="user-name" id="userName"></span>
-        <span class="grade-badge-header" id="gradeBadgeHeader"></span>
-        <div class="user-sync" id="userSync" title="Synchronisé"></div>
-        <button class="btn-logout" onclick="doLogout()">Déco</button>
+     <div class="user-panel" id="userPanel" style="display:none;position:relative">
+  <div class="user-avatar" id="userAvatar" onclick="toggleProfileDropdown()" style="cursor:pointer">?</div>
+  <span class="user-name" id="userName" onclick="toggleProfileDropdown()" style="cursor:pointer"></span>
+  <span class="grade-badge-header" id="gradeBadgeHeader"></span>
+  <div class="user-sync" id="userSync" title="Synchronisé"></div>
+  <button class="btn-logout" onclick="doLogout()">Déco</button>
+  <button class="owner-grade-btn" id="ownerGradeBtn" onclick="toggleGradePanel()" title="Panneau Grades" style="position:static;width:28px;height:28px;font-size:.85rem;flex-shrink:0">⭐</button>
+
+  <div id="profileDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:260px;background:var(--card);border:1px solid var(--accent);border-radius:12px;box-shadow:0 0 40px var(--accent-glow),0 20px 40px rgba(0,0,0,.5);z-index:5000;overflow:hidden">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(245,158,11,.06));display:flex;align-items:center;gap:10px">
+      <div id="dropAvatar" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#f59e0b);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:#fff;flex-shrink:0;overflow:hidden;border:2px solid var(--accent)">?</div>
+      <div style="flex:1;min-width:0">
+        <div id="dropName" style="font-family:'Barlow Condensed',sans-serif;font-size:.92rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+        <div id="dropEmail" style="font-size:.65rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       </div>
+    </div>
+    <div style="padding:8px">
+      <button onclick="openProfilePanel();closeProfileDropdown()" style="width:100%;padding:9px 12px;border-radius:8px;border:none;background:transparent;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:background .14s" onmouseover="this.style.background='var(--card2)'" onmouseout="this.style.background='transparent'">👤 Mon Profil</button>
+      <button onclick="openSettings();closeProfileDropdown()" style="width:100%;padding:9px 12px;border-radius:8px;border:none;background:transparent;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:background .14s" onmouseover="this.style.background='var(--card2)'" onmouseout="this.style.background='transparent'">⚙️ Paramètres</button>
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+      <button onclick="doLogout();closeProfileDropdown()" style="width:100%;padding:9px 12px;border-radius:8px;border:none;background:transparent;color:#fca5a5;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:background .14s" onmouseover="this.style.background='rgba(239,68,68,.1)'" onmouseout="this.style.background='transparent'">🚪 Se déconnecter</button>
+    </div>
+  </div>
+</div>
 
       <!-- Groupe navigation -->
       <div class="header-group">
@@ -219,8 +236,8 @@
         <button class="btn" onclick="toggleFocusMode()" title="Mode Focus (F2)" style="padding:5px 8px;border:none;background:none;color:var(--muted2)">🎯</button>
       </div>
 
-      <!-- Grade owner -->
-      <button class="owner-grade-btn" id="ownerGradeBtn" onclick="toggleGradePanel()" title="Panneau Grades">⭐</button>
+  
+  
 
       <!-- Groupe actions principales -->
       <div class="header-group" style="gap:5px">
