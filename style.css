@@ -837,3 +837,6 @@ body.focus-mode .focus-exit-hint{display:block}
 .live-indicator-dot{width:4px;height:4px;border-radius:50%;background:var(--live);animation:pulse 1.5s infinite}
 
 #livePanel{transition:max-height .3s ease,padding .3s ease}
+.owner-tab-btn{flex:1;padding:10px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .14s;letter-spacing:.5px}
+.owner-tab-btn:hover{color:var(--text)}
+.owner-tab-btn.active{color:#f59e0b;border-bottom-color:#f59e0b;background:rgba(245,158,11,.05)}
