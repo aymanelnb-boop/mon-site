@@ -294,7 +294,7 @@ function listenUser(uid){
   firestoreUnsub=fb.onSnapshot(fb.doc(db,'users',uid),(snap)=>{
     if(snap.exists()){
       const data=snap.data();
-      if(data.streamers && data.streamers.length>0)streamers=[...data.streamers];
+      if(data.streamers && data.streamers.length>0){streamers=[...data.streamers];render();}
       if(data.avatars)avatarCache={...data.avatars};
       if(data.categories && data.categories.length>0)categories=[...data.categories];
       if(data.grade){}
