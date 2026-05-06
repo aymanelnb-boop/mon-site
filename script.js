@@ -281,7 +281,9 @@ async function cloudSaveData(uid,data){
   catch(e){setSyncDot(false);}
 }
 function scheduleSave(){
-  if(!currentUser)return;setSyncDot(true);
+  if(!currentUser)return;
+  if(!streamers.length)return;
+  setSyncDot(true);
   if(saveDebounce)clearTimeout(saveDebounce);
   saveDebounce=setTimeout(()=>cloudSaveData(currentUser.uid,{streamers,avatars:avatarCache,categories}),1500);
 }
