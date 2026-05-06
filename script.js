@@ -78,7 +78,6 @@ let streamers=[], categories=[], selected=[], avatarCache={};
 let liveData={}, liveset=new Set(), prevLiveset=new Set();
 let popularLiveData={};
 const TWITCH_CLIENT_ID='3ahij1el6hqbrnozq18kjtk01annpd';
-const TWITCH_CLIENT_SECRET='2yaaw7p57xrhm825lzpwql6577q1n5';
 let twitchToken=null;
 let refreshCountdown=60, refreshTimer=null, countdownTimer=null;
 let isStreamsLaunched=false, fsMode=false, chatOpen=false, mainPct=62;
@@ -410,7 +409,7 @@ function startApp(){
 //  TWITCH API
 // ══════════════════════════════════════════
 async function getTwitchToken(){
-  const r=await fetch('https://id.twitch.tv/oauth2/token?client_id='+TWITCH_CLIENT_ID+'&client_secret='+TWITCH_CLIENT_SECRET+'&grant_type=client_credentials',{method:'POST'});
+  const r=await fetch('https://shiny-voice-ca37.aymane-lnb.workers.dev');
   return (await r.json()).access_token;
 }
 async function fetchLiveStatus(){
@@ -1624,7 +1623,7 @@ async function saveEmail(){
   const email=document.getElementById('profileEmail').value.trim();
   if(!email){profileMsg('error','Email vide !');return;}
   try{
-    await currentUser.updateEmail(email);
+    await window._fb.updateEmail(currentUser, email);
     profileMsg('success','✅ Email mis à jour !');
   }catch(e){
     if(e.code==='auth/requires-recent-login')profileMsg('error','Reconnecte-toi d\'abord pour changer l\'email.');
