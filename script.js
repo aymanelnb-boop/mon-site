@@ -767,7 +767,7 @@ async function fetchPopularAvatars(){
     for(const batch of batches){
       const needFetch = batch.filter(l=>!avatarCache[l]);
       if(!needFetch.length) continue;
-      const logins = needFetch.map(s=>'login='+s).join('&');
+      const logins = needFetch.map(l=>'login='+encodeURIComponent(l)).join('&');
       const r = await fetch('https://api.twitch.tv/helix/users?'+logins,
         {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
       if(!r.ok) continue;
@@ -826,8 +826,8 @@ function renderSbSuggestions(){
   if(streamers.length>3){if(sugg)sugg.style.display='none';return;}
   if(sugg)sugg.style.display='';pills.innerHTML='';
   const sorted=[...POPULAR_FR].sort((a,b)=>(liveset.has(b.twitch)?1:0)-(liveset.has(a.twitch)?1:0)).slice(0,20);
-  deduped.forEach(p=>{
-    const isLive=!!popularLiveData[p.twitch]
+  sorted.forEach(p=>{
+    if(streamers.find(s=>s.twitch===p.twitch))return;
     const pill=document.createElement('button');pill.className='suggest-pill'+(liveset.has(p.twitch)?' live':'');
     const av=avatarCache[p.twitch];
 pill.innerHTML=(av?`<img src="${av}" style="width:14px;height:14px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px">`:'')+(liveset.has(p.twitch)?'🔴 ':'')+p.nom;
