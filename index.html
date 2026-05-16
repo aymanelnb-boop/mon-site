@@ -13,14 +13,14 @@
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
     import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
     const firebaseConfig = {
-      apiKey: "AIzaSyCwwxy-L2jk-VchUruIk_kWn6MrY3tHkmY",
-      authDomain: "multistream-a61ab.firebaseapp.com",
-      projectId: "multistream-a61ab",
-      storageBucket: "multistream-a61ab.firebasestorage.app",
-      messagingSenderId: "28286068307",
-      appId: "1:28286068307:web:f7847370787f1e067488a6",
-      measurementId: "G-YM113JHDX3"
-    };
+  apiKey: "AIzaSyBl6bz4A47tI_Nw7z1NUaq3Z4N5tyKOh4s",
+  authDomain: "multistream-91782.firebaseapp.com",
+  projectId: "multistream-91782",
+  storageBucket: "multistream-91782.firebasestorage.app",
+  messagingSenderId: "793549778688",
+  appId: "1:793549778688:web:925e7084c7a1e9739ecde5",
+  measurementId: "G-E31HZYXKRZ"
+};
     const app = initializeApp(firebaseConfig);
     window._auth = getAuth(app);
     window._db   = getFirestore(app);
