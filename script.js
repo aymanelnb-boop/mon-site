@@ -789,7 +789,7 @@ function renderPopularGrid(){
     const gameStr=getGame(p.twitch);
     const subHtml=isLive?`<div class="pc-sub" style="display:flex;align-items:center;gap:3px"><div class="pc-live-dot"></div>${gameStr||'Live'}</div>`:`<div class="pc-sub">Hors ligne</div>`;
 
-    card.innerHTML=`${thumbHtml}<div class="pc-body">${avHtml}<div class="pc-info"><div class="pc-name">${p.nom}</div>${subHtml}</div></div>`;
+    card.innerHTML=`${thumbHtml}<div class="pc-body">${avHtml}<div class="pc-info"><div class="pc-name">${p.nom}</div>${subHtml}</div>${isAdded?'<span style="font-size:.6rem;color:var(--online)">✓</span>':''}</div>`;
     if(!isAdded){card.onclick=()=>{addStreamer({twitch:p.twitch,nom:p.nom,avatar:avatarCache[p.twitch]||null,isLive});card.classList.add('already-added');};}
     grid.appendChild(card);
   });
