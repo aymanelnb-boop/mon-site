@@ -78,6 +78,7 @@ let streamers=[], categories=[], selected=[], avatarCache={};
 let liveData={}, liveset=new Set(), prevLiveset=new Set();
 let popularLiveData={};
 const TWITCH_CLIENT_ID='3ahij1el6hqbrnozq18kjtk01annpd';
+const TWITCH_CLIENT_SECRET='2yaaw7p57xrhm825lzpwql6577q1n5';
 let twitchToken=null;
 let refreshCountdown=60, refreshTimer=null, countdownTimer=null;
 let isStreamsLaunched=false, fsMode=false, chatOpen=false, mainPct=62;
@@ -281,9 +282,7 @@ async function cloudSaveData(uid,data){
   catch(e){setSyncDot(false);}
 }
 function scheduleSave(){
-  if(!currentUser)return;
-  if(!streamers.length)return;
-  setSyncDot(true);
+  if(!currentUser)return;setSyncDot(true);
   if(saveDebounce)clearTimeout(saveDebounce);
   saveDebounce=setTimeout(()=>cloudSaveData(currentUser.uid,{streamers,avatars:avatarCache,categories}),1500);
 }
@@ -294,7 +293,7 @@ function listenUser(uid){
   firestoreUnsub=fb.onSnapshot(fb.doc(db,'users',uid),(snap)=>{
     if(snap.exists()){
       const data=snap.data();
-      if(data.streamers && data.streamers.length>0){streamers=[...data.streamers];render();}
+      if(data.streamers && data.streamers.length>0)streamers=[...data.streamers];
       if(data.avatars)avatarCache={...data.avatars};
       if(data.categories && data.categories.length>0)categories=[...data.categories];
       if(data.grade){}
@@ -411,7 +410,7 @@ function startApp(){
 //  TWITCH API
 // ══════════════════════════════════════════
 async function getTwitchToken(){
-  const r=await fetch('https://shiny-voice-ca37.aymane-lnb.workers.dev');
+  const r=await fetch('https://id.twitch.tv/oauth2/token?client_id='+TWITCH_CLIENT_ID+'&client_secret='+TWITCH_CLIENT_SECRET+'&grant_type=client_credentials',{method:'POST'});
   return (await r.json()).access_token;
 }
 async function fetchLiveStatus(){
@@ -1625,7 +1624,7 @@ async function saveEmail(){
   const email=document.getElementById('profileEmail').value.trim();
   if(!email){profileMsg('error','Email vide !');return;}
   try{
-    await window._fb.updateEmail(currentUser, email);
+    await currentUser.updateEmail(email);
     profileMsg('success','✅ Email mis à jour !');
   }catch(e){
     if(e.code==='auth/requires-recent-login')profileMsg('error','Reconnecte-toi d\'abord pour changer l\'email.');
@@ -1641,9 +1640,10 @@ async function savePassword(){
   if(newPw!==confirmPw){profileMsg('error','Les mots de passe ne correspondent pas !');return;}
   if(newPw.length<6){profileMsg('error','Minimum 6 caractères !');return;}
   try{
-    const cred=firebase.auth.EmailAuthProvider.credential(currentUser.email,oldPw);
-    await currentUser.reauthenticateWithCredential(cred);
-    await currentUser.updatePassword(newPw);
+    const {EmailAuthProvider,reauthenticateWithCredential,updatePassword}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    const cred=EmailAuthProvider.credential(currentUser.email,oldPw);
+    await reauthenticateWithCredential(currentUser,cred);
+    await updatePassword(currentUser,newPw);
     document.getElementById('profilePwOld').value='';
     document.getElementById('profilePwNew').value='';
     document.getElementById('profilePwConfirm').value='';
