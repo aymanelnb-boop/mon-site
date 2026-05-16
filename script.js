@@ -554,10 +554,10 @@ if(window._firebaseReady)window._initApp();
 
 function startApp(){
   initTwitchConnect();
+  renderPopularGrid();
   fetchLiveStatus();
   refreshTimer=setInterval(fetchLiveStatus,60000);
   startCountdown();
-  renderPopularGrid();
   render();
   renderHistory();
   setTimeout(fetchPopularAvatars,800);
@@ -801,7 +801,7 @@ function renderSbSuggestions(){
   const sugg=document.getElementById('sbSuggestions');
   if(streamers.length>3){if(sugg)sugg.style.display='none';return;}
   if(sugg)sugg.style.display='';pills.innerHTML='';
-  const sorted=[...POPULAR_FR].sort((a,b)=>(liveset.has(b.twitch)?1:0)-(liveset.has(a.twitch)?1:0)).slice(0,10);
+  const sorted=[...POPULAR_FR].sort((a,b)=>(liveset.has(b.twitch)?1:0)-(liveset.has(a.twitch)?1:0)).slice(0,20);
   sorted.forEach(p=>{
     if(streamers.find(s=>s.twitch===p.twitch))return;
     const pill=document.createElement('button');pill.className='suggest-pill'+(liveset.has(p.twitch)?' live':'');
