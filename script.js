@@ -1001,9 +1001,20 @@ function buildItem(s){
 }
 
 function buildThumb(s){
-  const thumb=getThumbnail(s.twitch),viewers=getViewers(s.twitch),game=getGame(s.twitch),title=getTitle(s.twitch);
-  const imgEl=thumb?`<img class="s-thumb-img" src="${thumb}" alt="${s.nom}">`:`<div style="width:100%;aspect-ratio:16/9;background:var(--bg);display:flex;align-items:center;justify-content:center;opacity:.3">📺</div>`;
-  return`<div class="s-thumb-wrap">${imgEl}<div class="s-thumb-info"><div class="s-thumb-name">${s.nom}</div>${game?`<div class="s-thumb-game">🎮 ${game}</div>`:''}<div class="s-thumb-row"><span class="s-thumb-live">LIVE</span><span class="s-thumb-viewers">${fmtV(viewers)} viewers</span></div>${title?`<div class="s-thumb-game" style="margin-top:4px;font-style:italic">${title.length>55?title.substring(0,55)+'…':title}</div>`:''}</div><div class="s-thumb-actions"><button class="s-thumb-btn" onclick="event.stopPropagation();toggle('${s.twitch}')">+ Ajouter</button><button class="s-thumb-btn" onclick="event.stopPropagation();quickLaunchSingle('${s.twitch}')">Lancer seul</button></div></div>`;
+  const viewers=getViewers(s.twitch),game=getGame(s.twitch),title=getTitle(s.twitch);
+  return`<div class="s-thumb-wrap">
+    <iframe src="https://player.twitch.tv/?channel=${s.twitch}&parent=${PARENT}&autoplay=true&muted=true" style="width:100%;aspect-ratio:16/9;border:none;display:block" allowfullscreen></iframe>
+    <div class="s-thumb-info">
+      <div class="s-thumb-name">${s.nom}</div>
+      ${game?`<div class="s-thumb-game">🎮 ${game}</div>`:''}
+      <div class="s-thumb-row"><span class="s-thumb-live">LIVE</span><span class="s-thumb-viewers">${fmtV(viewers)} viewers</span></div>
+      ${title?`<div class="s-thumb-game" style="margin-top:4px;font-style:italic">${title.length>55?title.substring(0,55)+'…':title}</div>`:''}
+    </div>
+    <div class="s-thumb-actions">
+      <button class="s-thumb-btn" onclick="event.stopPropagation();toggle('${s.twitch}')">+ Ajouter</button>
+      <button class="s-thumb-btn" onclick="event.stopPropagation();quickLaunchSingle('${s.twitch}')">Lancer seul</button>
+    </div>
+  </div>`;
 }
 
 function quickLaunchSingle(twitch){
