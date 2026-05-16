@@ -782,15 +782,7 @@ async function fetchPopularAvatars(){
     render(); // refresh la sidebar aussi
   }catch(e){console.warn('Popular avatars:',e);}
 }
-  try{
-    if(!twitchToken)twitchToken=await getTwitchToken();
-    const needFetch=POPULAR_FR.filter(s=>!avatarCache[s.twitch]);if(!needFetch.length){renderPopularGrid();return;}
-    const logins=needFetch.map(s=>'login='+s.twitch).join('&');
-    const r=await fetch('https://api.twitch.tv/helix/users?'+logins,{headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
-    if(!r.ok)return;const d=await r.json();
-    (d.data||[]).forEach(u=>{avatarCache[u.login.toLowerCase()]=u.profile_image_url;});
-    saveAvatars();scheduleSave();renderPopularGrid();
-  }catch(e){console.warn('Popular avatars:',e);}
+  
 
 
 function renderPopularGrid(){
@@ -807,7 +799,7 @@ function renderPopularGrid(){
     seen.add(p.twitch);
     return true;
   });
-  sorted.forEach(p=>{
+  deduped.forEach(p=>{
     const isLive=!!popularLiveData[p.twitch],isAdded=streamers.find(s=>s.twitch===p.twitch);
     const card=document.createElement('div');
     card.className='popular-card'+(isLive?' is-live':'')+(isAdded?' already-added':'');
@@ -834,8 +826,8 @@ function renderSbSuggestions(){
   if(streamers.length>3){if(sugg)sugg.style.display='none';return;}
   if(sugg)sugg.style.display='';pills.innerHTML='';
   const sorted=[...POPULAR_FR].sort((a,b)=>(liveset.has(b.twitch)?1:0)-(liveset.has(a.twitch)?1:0)).slice(0,20);
-  sorted.forEach(p=>{
-    if(streamers.find(s=>s.twitch===p.twitch))return;
+  deduped.forEach(p=>{
+    const isLive=!!popularLiveData[p.twitch]
     const pill=document.createElement('button');pill.className='suggest-pill'+(liveset.has(p.twitch)?' live':'');
     const av=avatarCache[p.twitch];
 pill.innerHTML=(av?`<img src="${av}" style="width:14px;height:14px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px">`:'')+(liveset.has(p.twitch)?'🔴 ':'')+p.nom;
