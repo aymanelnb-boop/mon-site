@@ -560,7 +560,7 @@ function startApp(){
   startCountdown();
   render();
   renderHistory();
-  setTimeout(fetchPopularAvatars,800);
+  fetchLiveStatus().then(()=>fetchPopularAvatars());
   loadSharedSession();
   initSearchDebounce();
 }
@@ -579,7 +579,7 @@ async function fetchLiveStatus(){
     if(!twitchToken)twitchToken=await getTwitchToken();
     const allLogins=[...new Set([...streamers.map(s=>s.twitch),...POPULAR_FR.map(s=>s.twitch)])];
     if(!allLogins.length){render();return;}
-    const logins=allLogins.map(l=>'user_login='+l).join('&');
+    const logins=allLogins.slice(0,100).map(l=>'user_login='+l).join('&');
     const r=await fetch('https://api.twitch.tv/helix/streams?'+logins+'&first=100',{headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
     if(r.status===401){twitchToken=null;return fetchLiveStatus();}
     const d=await r.json();
