@@ -759,6 +759,31 @@ function closeWelcomeResults(){document.getElementById('welcomeResults').classLi
 async function fetchPopularAvatars(){
   try{
     if(!twitchToken)twitchToken=await getTwitchToken();
+    // Charger par batch de 100 (limite Twitch)
+    const allLogins = POPULAR_FR.map(s=>s.twitch);
+    const batches = [];
+    for(let i=0;i<allLogins.length;i+=100) batches.push(allLogins.slice(i,i+100));
+    
+    for(const batch of batches){
+      const needFetch = batch.filter(l=>!avatarCache[l]);
+      if(!needFetch.length) continue;
+      const logins = needFetch.map(s=>'login='+s).join('&');
+      const r = await fetch('https://api.twitch.tv/helix/users?'+logins,
+        {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
+      if(!r.ok) continue;
+      const d = await r.json();
+      (d.data||[]).forEach(u=>{
+        avatarCache[u.login.toLowerCase()] = u.profile_image_url;
+      });
+    }
+    saveAvatars();
+    scheduleSave();
+    renderPopularGrid();
+    render(); // refresh la sidebar aussi
+  }catch(e){console.warn('Popular avatars:',e);}
+}
+  try{
+    if(!twitchToken)twitchToken=await getTwitchToken();
     const needFetch=POPULAR_FR.filter(s=>!avatarCache[s.twitch]);if(!needFetch.length){renderPopularGrid();return;}
     const logins=needFetch.map(s=>'login='+s.twitch).join('&');
     const r=await fetch('https://api.twitch.tv/helix/users?'+logins,{headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
@@ -766,7 +791,7 @@ async function fetchPopularAvatars(){
     (d.data||[]).forEach(u=>{avatarCache[u.login.toLowerCase()]=u.profile_image_url;});
     saveAvatars();scheduleSave();renderPopularGrid();
   }catch(e){console.warn('Popular avatars:',e);}
-}
+
 
 function renderPopularGrid(){
   const grid=document.getElementById('popularGrid');if(!grid)return;grid.innerHTML='';
@@ -774,6 +799,13 @@ function renderPopularGrid(){
     const aL=popularLiveData[a.twitch]?1:0,bL=popularLiveData[b.twitch]?1:0;
     if(bL!==aL)return bL-aL;
     return getViewers(b.twitch)-getViewers(a.twitch);
+  });
+  // Dédoublonner (POPULAR_FR a des doublons)
+  const seen = new Set();
+  const deduped = sorted.filter(p=>{
+    if(seen.has(p.twitch)) return false;
+    seen.add(p.twitch);
+    return true;
   });
   sorted.forEach(p=>{
     const isLive=!!popularLiveData[p.twitch],isAdded=streamers.find(s=>s.twitch===p.twitch);
