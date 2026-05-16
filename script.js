@@ -805,7 +805,8 @@ function renderSbSuggestions(){
   sorted.forEach(p=>{
     if(streamers.find(s=>s.twitch===p.twitch))return;
     const pill=document.createElement('button');pill.className='suggest-pill'+(liveset.has(p.twitch)?' live':'');
-    pill.textContent=(liveset.has(p.twitch)?'🔴 ':'')+p.nom;
+    const av=avatarCache[p.twitch];
+pill.innerHTML=(av?`<img src="${av}" style="width:14px;height:14px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px">`:'')+(liveset.has(p.twitch)?'🔴 ':'')+p.nom;
     pill.onclick=()=>{addStreamer({twitch:p.twitch,nom:p.nom,avatar:avatarCache[p.twitch]||null});};
     pills.appendChild(pill);
   });
@@ -1382,6 +1383,13 @@ function switchChat(){const id=document.getElementById('chatSelect').value,w=doc
 function openMobileSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open');}
 function closeMobileSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');}
 function toggleMobileSidebar(){const s=document.getElementById('sidebar');if(s.classList.contains('open'))closeMobileSidebar();else openMobileSidebar();}
+function toggleSidebar(){
+  const s=document.getElementById('sidebar');
+  const open=s.style.width!=='32px';
+  s.style.width=open?'32px':'270px';
+  s.style.minWidth=open?'32px':'180px';
+  s.style.overflow=open?'hidden':'';
+}
 
 // ══════════════════════════════════════════
 //  GLOBAL CONTROLS
