@@ -226,6 +226,19 @@ const POPULAR_FR = [
   {twitch:'walid',nom:'Walid'},{twitch:'nateos',nom:'Nateos'},
   {twitch:'margauxklb__',nom:'Margauxklb__'},{twitch:'anas_off',nom:'Anas_Off'},
 ];
+
+(function nettoyerPopularFR() {
+  const vus = new Set();
+  for (let i = POPULAR_FR.length - 1; i >= 0; i--) {
+    POPULAR_FR[i].twitch = POPULAR_FR[i].twitch.replace(/\s+/g, '_');
+    if (vus.has(POPULAR_FR[i].twitch)) {
+      POPULAR_FR.splice(i, 1);
+    } else {
+      vus.add(POPULAR_FR[i].twitch);
+    }
+  }
+  console.log('✅ Liste nettoyée :', POPULAR_FR.length, 'streameurs');
+})();
  
 const CAT_COLORS = ['#7c3aed','#a855f7','#ef4444','#f59e0b','#22c55e','#3b82f6','#ec4899','#14b8a6','#f97316','#8b5cf6'];
 const PREFS_KEY = 'ms_prefs';
@@ -426,9 +439,10 @@ async function doRegister(){
 async function doLogout(){
   const auth=window._auth,fb=window._fb;if(!auth||!fb)return;
   if(firestoreUnsub){firestoreUnsub();firestoreUnsub=null;}
+  if(refreshTimer){ clearInterval(refreshTimer); refreshTimer=null; }
+  if(countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
   await fb.signOut(auth);currentUser=null;streamers=[];selected=[];categories=[];isOwner=false;
   document.getElementById('authOverlay').classList.remove('hidden');
- // supprimé
   showToast('👋 Déconnecté');
 }
 
@@ -1027,8 +1041,10 @@ function buildItem(s){
 
 function buildThumb(s){
   const viewers=getViewers(s.twitch),game=getGame(s.twitch),title=getTitle(s.twitch);
+  const thumb=getThumbnail(s.twitch);
+  const imgHtml=thumb?`<img src="${thumb}" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block" alt="${s.nom}">`:`<div style="width:100%;aspect-ratio:16/9;background:var(--bg);display:flex;align-items:center;justify-content:center;opacity:.2;font-size:2rem">📺</div>`;
   return`<div class="s-thumb-wrap">
-    <iframe src="https://player.twitch.tv/?channel=${s.twitch}&parent=${PARENT}&autoplay=true&muted=true" style="width:100%;aspect-ratio:16/9;border:none;display:block" allowfullscreen></iframe>
+    ${imgHtml}
     <div class="s-thumb-info">
       <div class="s-thumb-name">${s.nom}</div>
       ${game?`<div class="s-thumb-game">🎮 ${game}</div>`:''}
@@ -1826,11 +1842,15 @@ async function saveEmail(){
   const email=document.getElementById('profileEmail').value.trim();
   if(!email){profileMsg('error','Email vide !');return;}
   try{
-    await currentUser.updateEmail(email);
+    const { updateEmail } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    await updateEmail(currentUser, email);
     profileMsg('success','✅ Email mis à jour !');
   }catch(e){
-    if(e.code==='auth/requires-recent-login')profileMsg('error','Reconnecte-toi d\'abord pour changer l\'email.');
-    else profileMsg('error','Erreur : '+e.message);
+    if(e.code==='auth/requires-recent-login'){
+      profileMsg('error','Reconnecte-toi d\'abord pour changer l\'email.');
+    } else {
+      profileMsg('error','Erreur : '+e.message);
+    }
   }
 }
 
