@@ -568,13 +568,11 @@ if(window._firebaseReady)window._initApp();
 
 function startApp(){
   initTwitchConnect();
-  renderPopularGrid();
   fetchLiveStatus();
   refreshTimer=setInterval(fetchLiveStatus,60000);
   startCountdown();
   render();
   renderHistory();
-  fetchLiveStatus().then(()=>fetchPopularAvatars());
   loadSharedSession();
   initSearchDebounce();
 }
