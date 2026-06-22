@@ -350,12 +350,8 @@ function initTwitchConnect(){
 // ══════════════════════════════════════════
 async function fetchTwitchFollows(){
   if(!twitchUserToken){showToast('Connecte ton compte Twitch d\'abord !');return;}
-  const savedUser=localStorage.getItem('ms_twitch_user');
-  if(!savedUser)return;
-  let user;try{user=JSON.parse(savedUser);}catch(e){return;}
   showToast('⏳ Import de tes follows Twitch…');
   try{
-    // Récupère d'abord l'user depuis le token lui-même (plus fiable)
     const rMe=await fetch('https://api.twitch.tv/helix/users',{
       headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchUserToken}
     });
@@ -363,7 +359,6 @@ async function fetchTwitchFollows(){
     const dMe=await rMe.json();
     if(!dMe.data||!dMe.data[0]){showToast('❌ Impossible de récupérer ton profil Twitch');return;}
     const userId=dMe.data[0].id;
-    // Mettre à jour le user en localStorage avec les données fraîches
     localStorage.setItem('ms_twitch_user',JSON.stringify(dMe.data[0]));
     let cursor=null,allFollows=[];
     do{
@@ -385,38 +380,26 @@ async function fetchTwitchFollows(){
         added++;
       }
     });
-    if(added>0){render();scheduleSave();showToast('✅ '+added+' streameurs importés depuis Twitch !');}
-    else showToast('✅ Tous tes follows sont déjà dans ta liste !');
-  }catch(e){showToast('❌ Erreur de synchronisation Twitch');}
-  showToast('⏳ Import de tes follows Twitch…');
-  try{
-    let cursor=null,allFollows=[];
-    do{
-      let url=`https://api.twitch.tv/helix/channels/followed?user_id=${user.id}&first=100`;
-      if(cursor)url+=`&after=${cursor}`;
-      const r=await fetch(url,{headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchUserToken}});
-      if(r.status===401){disconnectTwitchAccount();showToast('⚠️ Session Twitch expirée, reconnecte-toi');return;}
-      if(!r.ok)break;
-      const d=await r.json();
-      allFollows=allFollows.concat(d.data||[]);
-      cursor=d.pagination?.cursor||null;
-    }while(cursor&&allFollows.length<500);
-    let added=0;
-    allFollows.forEach(f=>{
-      const login=f.broadcaster_login.toLowerCase();
-      if(!streamers.find(s=>s.twitch===login)){
-        streamers.push({twitch:login,nom:f.broadcaster_name});
-        added++;
+    if(added>0){
+      const newLogins=allFollows.map(f=>f.broadcaster_login.toLowerCase()).filter(l=>!avatarCache[l]);
+      if(newLogins.length){
+        const batches=[];
+        for(let i=0;i<newLogins.length;i+=100)batches.push(newLogins.slice(i,i+100));
+        for(const batch of batches){
+          const logins=batch.map(l=>'login='+encodeURIComponent(l)).join('&');
+          const rAv=await fetch('https://api.twitch.tv/helix/users?'+logins,{headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchUserToken}});
+          if(rAv.ok){const dAv=await rAv.json();(dAv.data||[]).forEach(u=>{avatarCache[u.login.toLowerCase()]=u.profile_image_url;});}
+        }
+        saveAvatars();scheduleSave();
       }
-    });
-    if(added>0){render();scheduleSave();showToast('✅ '+added+' streameurs importés depuis Twitch !');}
+      render();showToast('✅ '+added+' streameurs importés depuis Twitch !');
+    }
     else showToast('✅ Tous tes follows sont déjà dans ta liste !');
   }catch(e){showToast('❌ Erreur de synchronisation Twitch');}
 }
 
 // ══════════════════════════════════════════
 //  LOCALSTORAGE
-// ══════════════════════════════════════════
 function lsGet(k,d){try{const v=localStorage.getItem(k);return v!=null?JSON.parse(v):d}catch{return d}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 function saveState(){lsSet('ms_sel',selected)}
