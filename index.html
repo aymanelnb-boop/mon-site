@@ -183,6 +183,7 @@
       </div>
     </div>
 
+    <div id="mobileHeaderLive" style="display:none;align-items:center;gap:4px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);padding:3px 8px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;color:#fca5a5;flex-shrink:0"><div style="width:5px;height:5px;border-radius:50%;background:#ef4444;animation:pulse 1.5s infinite;flex-shrink:0"></div>&nbsp;<span id="mobileHeaderLiveNum">0</span>&nbsp;live</div>
     <div class="header-right">
   
       <!-- Groupe navigation -->
@@ -544,11 +545,13 @@
 
 <!-- MOBILE NAV -->
 <nav class="mobile-nav">
-  <button class="mnav-btn" onclick="toggleMobileSidebar()"><span class="mnav-icon">👥</span><span>Streams</span></button>
+  <button class="mnav-btn active" id="mnavBtnStreams" onclick="mnavGo('streams',this)"><span class="mnav-icon">👥</span><span>Liste</span></button>
   <div class="mnav-sep"></div>
-  <button class="mnav-btn" onclick="toggleChat()"><span class="mnav-icon">💬</span><span>Chat</span></button>
+  <button class="mnav-btn" id="mnavBtnLive" onclick="mnavGo('live',this)"><span class="mnav-icon">🔴</span><span>Live</span><span class="mnav-live-badge" id="mnavLiveBadge"></span></button>
   <div class="mnav-sep"></div>
-  <button class="mnav-btn" onclick="openSettings()"><span class="mnav-icon">⚙️</span><span>Param</span></button>
+  <button class="mnav-btn" id="mnavBtnChat" onclick="mnavGo('chat',this)"><span class="mnav-icon">💬</span><span>Chat</span></button>
+  <div class="mnav-sep"></div>
+  <button class="mnav-btn" id="mnavBtnParam" onclick="mnavGo('param',this)"><span class="mnav-icon">⚙️</span><span>Param</span></button>
 </nav>
 <button class="mobile-launch-fab" id="mobileLaunchFab" onclick="mobileLaunch()" disabled>▶</button>
 
