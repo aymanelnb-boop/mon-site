@@ -1027,16 +1027,36 @@ function launchCategory(ci){
 }
 function toggleCatExpand(header){const card=header.closest('.cat-card');const membDiv=card.querySelector('.cat-members');const btn=header.querySelector('.cat-expand-btn');const isOpen=membDiv.classList.contains('open');membDiv.classList.toggle('open',!isOpen);btn.classList.toggle('open',!isOpen);}
 function toggleCatAddMember(ci,card){
-  const addDiv=card.querySelector(`#cataddmember_${ci}`);const membDiv=card.querySelector(`#catmembers_${ci}`);
-  const isHidden=addDiv.style.display==='none';addDiv.style.display=isHidden?'block':'none';
-  if(isHidden){membDiv.classList.add('open');card.querySelector('.cat-expand-btn').classList.add('open');
-    const suggest=card.querySelector(`#catSuggest_${ci}`);const cat=categories[ci];suggest.innerHTML='';
-    streamers.forEach(s=>{if(cat.members.includes(s.twitch))return;const el=document.createElement('div');el.className='cat-memb-suggest'+(liveset.has(s.twitch)?' is-live':'');el.textContent=(liveset.has(s.twitch)?'🔴 ':'')+s.nom;el.onclick=()=>{addMemberToCatDirect(ci,s.twitch);renderCatModal();};suggest.appendChild(el);});
-    setTimeout(()=>{const inp=card.querySelector(`#catAddInput_${ci}`);if(inp)inp.focus();},50);
+  const addDiv=card.querySelector(`#cataddmember_${ci}`);
+  const membDiv=card.querySelector(`#catmembers_${ci}`);
+  const isHidden=addDiv.style.display==='none';
+  addDiv.style.display=isHidden?'block':'none';
+  if(isHidden){
+    membDiv.classList.add('open');
+    card.querySelector('.cat-expand-btn').classList.add('open');
+    const suggest=card.querySelector(`#catSuggest_${ci}`);
+    const cat=categories[ci];
+    const renderSuggest=(query='')=>{
+      suggest.innerHTML='';
+      streamers.forEach(s=>{
+        if(cat.members.includes(s.twitch))return;
+        if(query&&!s.nom.toLowerCase().includes(query.toLowerCase())&&!s.twitch.toLowerCase().includes(query.toLowerCase()))return;
+        const el=document.createElement('div');
+        el.className='cat-memb-suggest'+(liveset.has(s.twitch)?' is-live':'');
+        el.textContent=(liveset.has(s.twitch)?'🔴 ':'')+s.nom;
+        el.onclick=()=>{addMemberToCatDirect(ci,s.twitch);};
+        suggest.appendChild(el);
+      });
+    };
+    renderSuggest();
+    setTimeout(()=>{
+      const inp=card.querySelector(`#catAddInput_${ci}`);
+      if(inp){inp.oninput=()=>renderSuggest(inp.value);inp.focus();}
+    },50);
   }
 }
 function addMemberToCat(ci){const inp=document.getElementById(`catAddInput_${ci}`);if(!inp)return;const val=inp.value.trim().toLowerCase();if(!val)return;const s=streamers.find(x=>x.twitch===val||x.nom.toLowerCase()===val);if(!s){showToast('Streameur non trouvé !');return;}addMemberToCatDirect(ci,s.twitch);renderCatModal();}
-function addMemberToCatDirect(ci,twitch){const cat=categories[ci];if(!cat)return;if(cat.members.includes(twitch)){showToast('Déjà dans cette catégorie !');return;}cat.members.push(twitch);saveCats();scheduleSave();renderSidebar();showToast('✅ Ajouté !');}
+function addMemberToCatDirect(ci,twitch){const cat=categories[ci];if(!cat)return;if(cat.members.includes(twitch)){showToast('Déjà dans cette catégorie !');return;}cat.members.push(twitch);saveCats();scheduleSave();renderSidebar();showToast('✅ Ajouté !');const membDiv=document.getElementById('catmembers_'+ci);if(membDiv){membDiv.innerHTML=buildCatMembersHtml(cat);membDiv.classList.add('open');}const suggestDiv=document.getElementById('catSuggest_'+ci);if(suggestDiv){suggestDiv.innerHTML='';streamers.forEach(s=>{if(cat.members.includes(s.twitch))return;const el=document.createElement('div');el.className='cat-memb-suggest'+(liveset.has(s.twitch)?' is-live':'');el.textContent=(liveset.has(s.twitch)?'🔴 ':'')+s.nom;el.onclick=()=>{addMemberToCatDirect(ci,s.twitch);};suggestDiv.appendChild(el);});};}
 function removeMemberFromCat(ci,twitch){const cat=categories[ci];if(!cat)return;cat.members=cat.members.filter(m=>m!==twitch);saveCats();scheduleSave();renderCatModal();renderSidebar();}
 function buildCatMembersHtml(cat){
   if(!cat.members.length)return '<div style="font-size:.7rem;color:var(--muted);padding:0 3px 3px;font-style:italic">Aucun membre</div>';
