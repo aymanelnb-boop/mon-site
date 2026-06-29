@@ -269,7 +269,18 @@ let focusMode=false;
 // Debounce pour la recherche auto
 let searchDebounceTimer=null;
 const SEARCH_DEBOUNCE_MS=400;
-
+// ══════════════════════════════════════════
+//  MOBILE NAV
+// ══════════════════════════════════════════
+function mnavGo(tab,btn){
+  if(!isMobile())return;
+  document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(tab==='streams'){openMobileSidebar();}
+  else if(tab==='live'){closeMobileSidebar();openLogoLiveModal();}
+  else if(tab==='chat'){closeMobileSidebar();if(!chatOpen||document.getElementById('chatPanel').classList.contains('hidden'))toggleChat();}
+  else if(tab==='param'){closeMobileSidebar();openSettings();}
+}
 // ══════════════════════════════════════════
 //  FOCUS MODE
 // ══════════════════════════════════════════
