@@ -397,7 +397,32 @@ async function fetchTwitchFollows(){
     else showToast('✅ Tous tes follows sont déjà dans ta liste !');
   }catch(e){showToast('❌ Erreur de synchronisation Twitch');}
 }
-
+// ══════════════════════════════════════════
+//  FETCH MISSING AVATARS
+// ══════════════════════════════════════════
+async function fetchMissingAvatars(){
+  const missing=streamers.filter(s=>!avatarCache[s.twitch]).map(s=>s.twitch);
+  if(!missing.length)return;
+  try{
+    if(!twitchToken)twitchToken=await getTwitchToken();
+    const batches=[];
+    for(let i=0;i<missing.length;i+=100)batches.push(missing.slice(i,i+100));
+    let changed=false;
+    for(const batch of batches){
+      const logins=batch.map(l=>'login='+encodeURIComponent(l)).join('&');
+      const r=await fetch('https://api.twitch.tv/helix/users?'+logins,
+        {headers:{'Client-ID':TWITCH_CLIENT_ID,'Authorization':'Bearer '+twitchToken}});
+      if(r.status===401){twitchToken=null;return;}
+      if(!r.ok)continue;
+      const d=await r.json();
+      (d.data||[]).forEach(u=>{
+        avatarCache[u.login.toLowerCase()]=u.profile_image_url;
+        changed=true;
+      });
+    }
+    if(changed){saveAvatars();scheduleSave();render();}
+  }catch(e){console.warn('fetchMissingAvatars:',e);}
+}
 // ══════════════════════════════════════════
 //  LOCALSTORAGE
 function lsGet(k,d){try{const v=localStorage.getItem(k);return v!=null?JSON.parse(v):d}catch{return d}}
@@ -628,6 +653,7 @@ function startApp(){
   renderHistory();
   loadSharedSession();
   initSearchDebounce();
+  setTimeout(fetchMissingAvatars,2500);
 }
 
 // ══════════════════════════════════════════
