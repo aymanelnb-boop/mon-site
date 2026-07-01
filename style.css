@@ -241,7 +241,8 @@ body.focus-mode .focus-exit-hint { display:block; }
 .sel .chk { background:var(--accent); border-color:var(--accent); color:#fff; }
 .s-del { display:none; background:none; border:none; cursor:pointer; font-size:.7rem; padding:2px; border-radius:3px; color:var(--muted); line-height:1; }
 .s-del:hover { color:#ff6b6b; background:rgba(235,4,0,.1); }
-.s-item:hover .s-del { display:flex; align-items:center; justify-content:center; }
+.s-item.dragging { opacity:.4; }
+.s-item.drag-over { box-shadow: inset 0 2px 0 var(--accent); }
 
 /* Thumbnail survol — simplifié */
 .s-thumb-wrap { position:absolute; left:calc(100% + 10px); top:50%; transform:translateY(-50%) scale(.96); width:240px; background:var(--card2); border:1px solid var(--border2); border-radius:8px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .18s,transform .18s; z-index:1000; }
