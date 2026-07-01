@@ -1144,7 +1144,33 @@ function buildItem(s){
   d.innerHTML=`${avHtml}<div class="s-info"><div class="s-name">${s.nom}</div>${isLive&&game?`<div class="s-game">🎮 ${game}</div>`:`<div class="s-sub">${s.twitch}</div>`}</div><div class="s-right">${vBadge}<div class="${isLive?'online-dot':'offline-dot'}"></div><div class="chk">${isSel?'✓':''}</div><button class="s-edit-btn" onclick="event.stopPropagation();openEditModal('${s.twitch}')" style="display:none;background:none;border:none;cursor:pointer;font-size:.7rem;padding:2px 4px;border-radius:3px;color:var(--muted)">✏️</button><button class="s-del" onclick="event.stopPropagation();deleteStreamer('${s.twitch}')">🗑</button></div>${thumb}`;
   d.addEventListener('mouseenter',()=>{const e=d.querySelector('.s-edit-btn');if(e)e.style.display='flex';});
   d.addEventListener('mouseleave',()=>{const e=d.querySelector('.s-edit-btn');if(e)e.style.display='none';});
+  d.draggable=true;
+  d.addEventListener('dragstart',(e)=>{sbDragSrc=s.twitch;d.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+  d.addEventListener('dragend',()=>{d.classList.remove('dragging');});
+  d.addEventListener('dragover',(e)=>{e.preventDefault();d.classList.add('drag-over');});
+  d.addEventListener('dragleave',()=>{d.classList.remove('drag-over');});
+  d.addEventListener('drop',(e)=>{e.preventDefault();d.classList.remove('drag-over');if(sbDragSrc&&sbDragSrc!==s.twitch)reorderStreamer(sbDragSrc,s.twitch);sbDragSrc=null;});
   return d;
+}
+
+function reorderStreamer(fromId,toId){
+  const catFrom=categories.find(c=>c.members.includes(fromId));
+  const catTo=categories.find(c=>c.members.includes(toId));
+  if(catFrom&&catTo&&catFrom===catTo){
+    const arr=catFrom.members;
+    const ia=arr.indexOf(fromId),ib=arr.indexOf(toId);
+    arr.splice(ib,0,arr.splice(ia,1)[0]);
+    saveCats();scheduleSave();
+  }else if(!catFrom&&!catTo){
+    const ia=streamers.findIndex(x=>x.twitch===fromId),ib=streamers.findIndex(x=>x.twitch===toId);
+    if(ia===-1||ib===-1)return;
+    streamers.splice(ib,0,streamers.splice(ia,1)[0]);
+    scheduleSave();
+  }else{
+    showToast('Déplace uniquement dans le même groupe !');
+    return;
+  }
+  render();
 }
 
 function buildThumb(s){
@@ -1258,6 +1284,7 @@ document.getElementById('logoLiveModal').addEventListener('click',function(e){if
 //  CHIPS
 // ══════════════════════════════════════════
 let chipDragSrc=null;
+let sbDragSrc=null;
 function renderChips(){
   const area=document.getElementById('chips');
   if(!selected.length){area.innerHTML='<span class="empty-chips">Sélectionne des streameurs…</span>';return;}
