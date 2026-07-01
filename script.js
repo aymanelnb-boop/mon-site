@@ -1378,33 +1378,33 @@ function removeStream(id){
   if(twitchPlayers[id]){try{twitchPlayers[id].destroy();}catch(e){}delete twitchPlayers[id];}
   saveState();render();if(!selected.length)endStreams();else updateStreamsLayout();updateMobileNav();
 }
-function promoteStream(id){
+function promoteStream(id){function promoteStream(id){
   const idx=selected.indexOf(id);
   if(idx<=0)return;
-  const oldMainId=selected[0];
-  const container=document.getElementById('streamsLayout');
-  const mainPane=container?container.querySelector('.main-stream-pane'):null;
-  const secPane=container?container.querySelector('.secondary-pane'):null;
-  const newMainBox=document.getElementById('box-'+id);
-  const oldMainBox=document.getElementById('box-'+oldMainId);
-  let swapped=false;
-  if(mainPane&&secPane&&newMainBox&&oldMainBox&&!isMobile()){
-    mainPane.appendChild(newMainBox);
-    secPane.insertBefore(oldMainBox,secPane.firstChild);
-    oldMainBox.style.flex='1';oldMainBox.style.minHeight='60px';
-    newMainBox.style.flex='';newMainBox.style.minHeight='';
-    newMainBox.querySelector('.stream-overlay').innerHTML=buildBoxOverlay(id,true);
-    oldMainBox.querySelector('.stream-overlay').innerHTML=buildBoxOverlay(oldMainId,false);
-    if(twitchPlayers[id])try{twitchPlayers[id].setMuted(false);}catch(e){}
-    if(twitchPlayers[oldMainId])try{twitchPlayers[oldMainId].setMuted(true);}catch(e){}
-    swapped=true;
-  }
   selected.splice(idx,1);selected.unshift(id);
   saveState();
-  if(!swapped&&isStreamsLaunched)updateStreamsLayout();
+  if(isStreamsLaunched&&!isMobile()){
+    const secCount=selected.length-1;
+    selected.forEach((sid,i)=>{
+      const box=document.getElementById('box-'+sid);
+      if(!box)return;
+      const ov=box.querySelector('.stream-overlay');
+      if(i===0){
+        box.style.gridColumn='1';box.style.gridRow='1 / span '+secCount;
+        if(ov)ov.innerHTML=buildBoxOverlay(sid,true);
+        if(twitchPlayers[sid])try{twitchPlayers[sid].setMuted(false);}catch(e){}
+      }else{
+        box.style.gridColumn='3';box.style.gridRow=String(i);
+        if(ov)ov.innerHTML=buildBoxOverlay(sid,false);
+        if(twitchPlayers[sid])try{twitchPlayers[sid].setMuted(true);}catch(e){}
+      }
+    });
+  }else if(isStreamsLaunched){
+    updateStreamsLayout();
+  }
   showToast('★ '+(streamers.find(x=>x.twitch===id)?.nom||id)+' mis en principal');
   render();
-}
+}}
 
 // ══════════════════════════════════════════
 //  IFRAMES + SKELETON LOADER
@@ -1446,14 +1446,15 @@ function getOrCreateIframe(id,isMain){
 }
 
 // updateStreamsLayout optimisé : diff DOM, pas de reconstruction totale
-function updateStreamsLayout(){
+function updateStreamsLayout(){function updateStreamsLayout(){
   if(!isStreamsLaunched)return;
   const container=document.getElementById('streamsLayout');
-  const currentIds=[...container.querySelectorAll('.stream-box')].map(b=>b.dataset.id);
-  // Si identique, rien à faire
-  if(JSON.stringify(currentIds)===JSON.stringify(selected))return;
-  // Reconstruire seulement si changement réel
+  const modeChanged=container.dataset.mode!==(isMobile()?'mobile':'desktop');
+  const currentIds=[...container.querySelectorAll('.stream-box')].map(b=>b.dataset.id).sort();
+  const wanted=[...selected].sort();
+  if(!modeChanged&&JSON.stringify(currentIds)===JSON.stringify(wanted))return;
   buildStreamsLayout(container,selected);
+}
 }
 
 function buildBoxOverlay(id,isMain){
@@ -1479,10 +1480,10 @@ function createStreamBox(id,isMain){
   return box;
 }
 
-function attachVSplitter(sp,lp,cont){
-  let drag=false,sx=0,sw=0;
-  const dn=cx=>{drag=true;sx=cx;sw=lp.offsetWidth;sp.classList.add('dragging');document.body.style.cursor='col-resize';document.body.style.userSelect='none';document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='none');};
-  const mv=cx=>{if(!drag)return;const cw=cont.getBoundingClientRect().width;const nw=Math.min(cw*.92,Math.max(cw*.08,sw+(cx-sx)));lp.style.width=nw+'px';mainPct=Math.round((nw/cw)*100);};
+function attachVSplitter(sp,lp,cont){function attachVSplitter(sp,cont){
+  let drag=false,sx=0,startPct=mainPct;
+  const dn=cx=>{drag=true;sx=cx;startPct=mainPct;sp.classList.add('dragging');document.body.style.cursor='col-resize';document.body.style.userSelect='none';document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='none');};
+  const mv=cx=>{if(!drag)return;const cw=cont.getBoundingClientRect().width;const deltaPct=((cx-sx)/cw)*100;mainPct=Math.min(92,Math.max(8,startPct+deltaPct));cont.style.gridTemplateColumns=mainPct+'% 4px 1fr';};
   const up=()=>{if(!drag)return;drag=false;sp.classList.remove('dragging');document.body.style.cursor='';document.body.style.userSelect='';document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='');if(currentCatId)saveCatLayout(currentCatId,mainPct);};
   sp.addEventListener('mousedown',e=>{e.preventDefault();dn(e.clientX);});
   document.addEventListener('mousemove',e=>mv(e.clientX));
@@ -1490,7 +1491,7 @@ function attachVSplitter(sp,lp,cont){
   sp.addEventListener('touchstart',e=>{e.preventDefault();dn(e.touches[0].clientX);},{passive:false});
   document.addEventListener('touchmove',e=>{if(drag){e.preventDefault();mv(e.touches[0].clientX);}},{passive:false});
   document.addEventListener('touchend',up);
-}
+}}
 function attachHSplitter(sp,tb,sec){
   let drag=false,sy=0,sh=0,th=0;
   const dn=cy=>{drag=true;sy=cy;sh=tb.offsetHeight;th=sec.getBoundingClientRect().height;sp.classList.add('dragging');document.body.style.cursor='row-resize';document.body.style.userSelect='none';document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='none');};
@@ -1504,9 +1505,11 @@ function attachHSplitter(sp,tb,sec){
   document.addEventListener('touchend',up);
 }
 
-function buildStreamsLayout(container,ids){
+function buildStreamsLayout(container,ids){function buildStreamsLayout(container,ids){
   container.innerHTML='';if(!ids.length)return;
+  container.dataset.mode=isMobile()?'mobile':'desktop';
   if(isMobile()){
+    container.style.display='flex';
     container.style.flexDirection='column';container.style.overflowY='auto';container.style.scrollSnapType='y mandatory';
     ids.forEach((id,i)=>{
       const box=createStreamBox(id,i===0);
@@ -1516,18 +1519,31 @@ function buildStreamsLayout(container,ids){
     });
     updateMobileNav();return;
   }
-  if(ids.length===1){const box=createStreamBox(ids[0],true);box.style.flex='1';container.appendChild(box);return;}
-  const lp=document.createElement('div');lp.className='main-stream-pane';lp.style.width=mainPct+'%';
-  const mb=createStreamBox(ids[0],true);mb.style.width='100%';mb.style.height='100%';lp.appendChild(mb);
+  container.style.display='grid';
+  if(ids.length===1){
+    container.style.gridTemplateColumns='1fr';
+    container.style.gridTemplateRows='1fr';
+    const box=createStreamBox(ids[0],true);
+    box.style.gridColumn='1';box.style.gridRow='1';
+    container.appendChild(box);
+    return;
+  }
+  const secCount=ids.length-1;
+  container.style.gridTemplateColumns=mainPct+'% 4px 1fr';
+  container.style.gridTemplateRows='repeat('+secCount+',1fr)';
+  const mainBox=createStreamBox(ids[0],true);
+  mainBox.style.gridColumn='1';mainBox.style.gridRow='1 / span '+secCount;
+  container.appendChild(mainBox);
   const vs=document.createElement('div');vs.className='v-splitter';
-  const sec=document.createElement('div');sec.className='secondary-pane';
+  vs.style.gridColumn='2';vs.style.gridRow='1 / span '+secCount;
+  container.appendChild(vs);
   ids.slice(1).forEach((id,i)=>{
-    if(i>0){const hs=document.createElement('div');hs.className='h-splitter';sec.appendChild(hs);requestAnimationFrame(()=>{const boxes=sec.querySelectorAll('.stream-box');if(boxes[i-1]&&boxes[i])attachHSplitter(hs,boxes[i-1],sec);});}
-    const box=createStreamBox(id,false);box.style.flex='1';box.style.width='100%';box.style.minHeight='60px';sec.appendChild(box);
+    const box=createStreamBox(id,false);
+    box.style.gridColumn='3';box.style.gridRow=String(i+1);
+    container.appendChild(box);
   });
-  container.appendChild(lp);container.appendChild(vs);container.appendChild(sec);
-  attachVSplitter(vs,lp,container);
-}
+  attachVSplitter(vs,container);
+}}
 
 // ══════════════════════════════════════════
 //  FULLSCREEN
