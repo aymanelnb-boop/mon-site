@@ -252,8 +252,12 @@ let popularLiveData={};
 const TWITCH_CLIENT_ID='3ahij1el6hqbrnozq18kjtk01annpd';
 const TWITCH_CLIENT_SECRET='2yaaw7p57xrhm825lzpwql6577q1n5';
 let twitchToken=null;
+const searchCache=new Map();
 let refreshCountdown=60, refreshTimer=null, countdownTimer=null;
 let isStreamsLaunched=false, fsMode=false, chatOpen=false, mainPct=62;
+let currentCatId=null;
+function getCatLayouts(){return lsGet('ms_cat_layouts',{});}
+function saveCatLayout(catId,pct){const l=getCatLayouts();l[catId]=pct;lsSet('ms_cat_layouts',l);}
 let editingTwitch=null, currentUser=null, firestoreUnsub=null, saveDebounce=null;
 const activeIframes={};
 const twitchPlayers={};
@@ -712,7 +716,17 @@ function fmtV(n){return n>=1000?(n/1000).toFixed(1).replace('.0','')+'k':String(
 
 // Notification live enrichie avec bouton "Voir"
 let nlTimer=null;
+function toggleNotifPref(on){
+  savePref('notifLive',on);
+  if(on&&'Notification' in window&&Notification.permission==='default'){
+    Notification.requestPermission();
+  }
+}
 function showNewLiveToast(s,login){
+  const prefs=getPrefs();
+  if(prefs.notifLive!==false&&'Notification' in window&&Notification.permission==='granted'&&document.hidden){
+    try{new Notification(s.nom+' est en live !',{body:getGame(login)||'Clique pour voir',icon:avatarCache[login]||undefined});}catch(e){}
+  }
   const t=document.getElementById('newLiveToast');
   if(!t)return;
   const game=getGame(login);
@@ -773,6 +787,9 @@ function initSearchDebounce(){
 // ══════════════════════════════════════════
 async function searchTwitch(query){
   if(!query.trim())return null;
+  const cacheKey=query.trim().toLowerCase();
+  const cached=searchCache.get(cacheKey);
+  if(cached&&Date.now()-cached.time<60000)return cached.results;
   try{
     if(!twitchToken)twitchToken=await getTwitchToken();
     const [rExact,rSearch]=await Promise.all([
@@ -791,6 +808,7 @@ async function searchTwitch(query){
       const si=liveData[login];
       results.push({twitch:login,nom:ch.display_name,avatar:ch.thumbnail_url||null,isLive:ch.is_live||!!si,viewers:si?si.viewer_count:0,game:ch.game_name||''});
     });}
+    searchCache.set(cacheKey,{results,time:Date.now()});
     return results;
   }catch(e){return [];}
 }
@@ -1022,7 +1040,10 @@ function deleteCategory(ci){const cat=categories[ci];if(!cat)return;if(!confirm(
 function launchCategory(ci){
   const cat=categories[ci];if(!cat||!cat.members.length){showToast('Catégorie vide !');return;}
   selected=[];cat.members.forEach(t=>{if(selected.length<10&&streamers.find(s=>s.twitch===t))selected.push(t);});
-  saveState();render();closeCatModal();if(selected.length){launchStreams();showToast('▶ "'+cat.name+'" lancée !');}
+  const layouts=getCatLayouts();
+  if(layouts[cat.id])mainPct=layouts[cat.id];
+  saveState();render();closeCatModal();
+  if(selected.length){launchStreams();currentCatId=cat.id;showToast('▶ "'+cat.name+'" lancée !');}
   else showToast('Aucun streameur dans ta liste !');
 }
 function toggleCatExpand(header){const card=header.closest('.cat-card');const membDiv=card.querySelector('.cat-members');const btn=header.querySelector('.cat-expand-btn');const isOpen=membDiv.classList.contains('open');membDiv.classList.toggle('open',!isOpen);btn.classList.toggle('open',!isOpen);}
@@ -1329,6 +1350,7 @@ function clearAll(){
 }
 function launchStreams(){
   if(!selected.length)return;
+  currentCatId=null;
   saveHistory();renderHistory();
   const ws=document.getElementById('welcomeScreen');
   const sa=document.getElementById('streamsArea');
@@ -1356,7 +1378,33 @@ function removeStream(id){
   if(twitchPlayers[id]){try{twitchPlayers[id].destroy();}catch(e){}delete twitchPlayers[id];}
   saveState();render();if(!selected.length)endStreams();else updateStreamsLayout();updateMobileNav();
 }
-function promoteStream(id){const idx=selected.indexOf(id);if(idx<=0)return;selected.splice(idx,1);selected.unshift(id);saveState();updateStreamsLayout();showToast('★ '+(streamers.find(x=>x.twitch===id)?.nom||id)+' mis en principal');render();}
+function promoteStream(id){
+  const idx=selected.indexOf(id);
+  if(idx<=0)return;
+  const oldMainId=selected[0];
+  const container=document.getElementById('streamsLayout');
+  const mainPane=container?container.querySelector('.main-stream-pane'):null;
+  const secPane=container?container.querySelector('.secondary-pane'):null;
+  const newMainBox=document.getElementById('box-'+id);
+  const oldMainBox=document.getElementById('box-'+oldMainId);
+  let swapped=false;
+  if(mainPane&&secPane&&newMainBox&&oldMainBox&&!isMobile()){
+    mainPane.appendChild(newMainBox);
+    secPane.insertBefore(oldMainBox,secPane.firstChild);
+    oldMainBox.style.flex='1';oldMainBox.style.minHeight='60px';
+    newMainBox.style.flex='';newMainBox.style.minHeight='';
+    newMainBox.querySelector('.stream-overlay').innerHTML=buildBoxOverlay(id,true);
+    oldMainBox.querySelector('.stream-overlay').innerHTML=buildBoxOverlay(oldMainId,false);
+    if(twitchPlayers[id])try{twitchPlayers[id].setMuted(false);}catch(e){}
+    if(twitchPlayers[oldMainId])try{twitchPlayers[oldMainId].setMuted(true);}catch(e){}
+    swapped=true;
+  }
+  selected.splice(idx,1);selected.unshift(id);
+  saveState();
+  if(!swapped&&isStreamsLaunched)updateStreamsLayout();
+  showToast('★ '+(streamers.find(x=>x.twitch===id)?.nom||id)+' mis en principal');
+  render();
+}
 
 // ══════════════════════════════════════════
 //  IFRAMES + SKELETON LOADER
@@ -1408,15 +1456,18 @@ function updateStreamsLayout(){
   buildStreamsLayout(container,selected);
 }
 
-function createStreamBox(id,isMain){
+function buildBoxOverlay(id,isMain){
   const s=streamers.find(x=>x.twitch===id)||{nom:id};
-  const box=document.createElement('div');box.className='stream-box';box.id='box-'+id;box.dataset.id=id;box.style.width='100%';box.style.height='100%';
-  const ov=document.createElement('div');ov.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:2';
   const v=getViewers(id),isLive=liveset.has(id);
   const mainBadge=isMain&&selected.length>1?'<div class="main-badge">★ Principal</div>':'';
   const promBtn=isMain||selected.length===1?'':`<button class="stream-promote-btn" style="pointer-events:all" onclick="promoteStream('${id}')">★ Principal</button>`;
-  ov.innerHTML=`${mainBadge}<div class="stream-label">${s.nom}</div>${isLive?`<div class="stream-viewers" style="pointer-events:none"><div class="stream-viewers-dot"></div>${fmtV(v)}</div>`:''}<button class="stream-fs-btn" style="pointer-events:all" onclick="openFullscreen('${id}')">⛶</button><button class="stream-close" style="pointer-events:all" onclick="removeStream('${id}')">✕</button><button class="stream-chat-btn" style="pointer-events:all" onclick="openChatFor('${id}')">💬 Chat</button>${promBtn}`;
-  // Skeleton loader
+  return `${mainBadge}<div class="stream-label">${s.nom}</div>${isLive?`<div class="stream-viewers" style="pointer-events:none"><div class="stream-viewers-dot"></div>${fmtV(v)}</div>`:''}<button class="stream-fs-btn" style="pointer-events:all" onclick="openFullscreen('${id}')">⛶</button><button class="stream-close" style="pointer-events:all" onclick="removeStream('${id}')">✕</button><button class="stream-chat-btn" style="pointer-events:all" onclick="openChatFor('${id}')">💬 Chat</button>${promBtn}`;
+}
+function createStreamBox(id,isMain){
+  const s=streamers.find(x=>x.twitch===id)||{nom:id};
+  const box=document.createElement('div');box.className='stream-box';box.id='box-'+id;box.dataset.id=id;box.style.width='100%';box.style.height='100%';
+  const ov=document.createElement('div');ov.className='stream-overlay';ov.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:2';
+  ov.innerHTML=buildBoxOverlay(id,isMain);
   const skeleton=document.createElement('div');
   skeleton.className='stream-skeleton';
   skeleton.innerHTML=`<div class="stream-skeleton-spinner"></div><div class="stream-skeleton-name">${s.nom}</div><div class="stream-skeleton-label">${s.nom}</div>`;
@@ -1432,7 +1483,7 @@ function attachVSplitter(sp,lp,cont){
   let drag=false,sx=0,sw=0;
   const dn=cx=>{drag=true;sx=cx;sw=lp.offsetWidth;sp.classList.add('dragging');document.body.style.cursor='col-resize';document.body.style.userSelect='none';document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='none');};
   const mv=cx=>{if(!drag)return;const cw=cont.getBoundingClientRect().width;const nw=Math.min(cw*.92,Math.max(cw*.08,sw+(cx-sx)));lp.style.width=nw+'px';mainPct=Math.round((nw/cw)*100);};
-  const up=()=>{if(!drag)return;drag=false;sp.classList.remove('dragging');document.body.style.cursor='';document.body.style.userSelect='';document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='');};
+  const up=()=>{if(!drag)return;drag=false;sp.classList.remove('dragging');document.body.style.cursor='';document.body.style.userSelect='';document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='');if(currentCatId)saveCatLayout(currentCatId,mainPct);};
   sp.addEventListener('mousedown',e=>{e.preventDefault();dn(e.clientX);});
   document.addEventListener('mousemove',e=>mv(e.clientX));
   document.addEventListener('mouseup',up);
@@ -1610,6 +1661,11 @@ document.addEventListener('keydown',e=>{
     case 't':case 'T':toggleTheme();break;
     case ' ':e.preventDefault();toggleAllStreams();break;
     case 'm':case 'M':toggleMuteAll();break;
+    case '1':case '2':case '3':case '4':case '5':case '6':case '7':case '8':case '9':{
+      const idx=parseInt(e.key,10)-1;
+      if(selected[idx]&&isStreamsLaunched)promoteStream(selected[idx]);
+      break;
+    }
     case 'Enter':if(!document.getElementById('btnLaunch').disabled)launchStreams();break;
     case 'ArrowRight':if(selected.length>1){selected.push(selected.shift());saveState();render();if(isStreamsLaunched)updateStreamsLayout();}break;
     case 'ArrowLeft':if(selected.length>1){selected.unshift(selected.pop());saveState();render();if(isStreamsLaunched)updateStreamsLayout();}break;
